@@ -2,12 +2,12 @@ import Link from "next/link"
 const Navbar = () => {
   return (
     <nav className="py-6 max-w-6xl mx-auto">
-      <div className="flex justify-between">
+      <div className="flex justify-between px-4 md:px-0">
         <div className="flex items-center gap-3">
           <div className="flex justify-center items-center p-2 w-8 h-8 rounded-full bg-amber-900">
             <span className="text-white font-bold text-lg">🧁</span>
           </div>
-          <p className="font-bold text-xl">Sweet Heaven</p>
+          <p className="font-bold md:text-xl">Sweet Heaven</p>
         </div>
 
         <ul className="flex justify-center items-center gap-12">
