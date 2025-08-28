@@ -51,9 +51,9 @@ export const CategoryButton = ({
   className = "",
 }: CategoryButtonProps) => {
   const activeClass = active
-    ? `bg-abmer-500 text-white`
+    ? `bg-amber-500 text-white`
     : `bg-gray-200 text-gray-700 hover:bg-gray-300`
-  const buttonClass = `px-4 py-2 rounded-full transition-colors ${activeClass} ${className}`
+  const buttonClass = `px-4 py-2 min-w-24 rounded-full transition-colors ${activeClass} ${className}`
   if (href) {
     return (
       <Link href={href} className={buttonClass}>

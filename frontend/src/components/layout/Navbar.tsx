@@ -1,5 +1,9 @@
+"use client"
 import Link from "next/link"
+import { useState } from "react"
 const Navbar = () => {
+  const [isOpen, setIsOpen] = useState(false)
+
   return (
     <nav className="py-6 max-w-6xl mx-auto">
       <div className="flex justify-between px-4 md:px-0">
@@ -10,7 +14,7 @@ const Navbar = () => {
           <p className="font-bold md:text-xl">Sweet Heaven</p>
         </div>
 
-        <ul className="flex justify-center items-center gap-12">
+        <ul className="hidden md:flex justify-center items-center gap-12">
           <li>
             <Link href={`/`}>
               <span>
@@ -69,7 +73,59 @@ const Navbar = () => {
             </Link>
           </li>
         </ul>
+
+        {/* hamburger */}
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="md:hidden p-2 rounded focus:outline-none">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.5}
+            stroke="currentColor"
+            className="size-6 md:hidden">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+            />
+          </svg>
+        </button>
       </div>
+      {/* mobile menu */}
+      {isOpen && (
+        <ul className="flex flex-col gap-6 mt-4 px-4 md:hidden">
+          <li>
+            <Link
+              href="/"
+              className="block w-full py-3 text-center hover:bg-amber-100 rounded">
+              Home
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/products"
+              className="block w-full py-3 text-center hover:bg-amber-100 rounded">
+              Products
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/cart"
+              className="block w-full py-3 text-center hover:bg-amber-100 rounded">
+              Cart
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/login"
+              className="block w-full py-3 text-center hover:bg-amber-100 rounded">
+              Login
+            </Link>
+          </li>
+        </ul>
+      )}
     </nav>
   )
 }
