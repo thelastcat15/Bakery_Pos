@@ -1,6 +1,7 @@
 import { Product } from "@/types/product_type"
 import Image from "next/image"
 import { CartButton, DecreaseButton, IncreaseButton } from "./Button"
+import { UseCart } from "@/hooks/useCart"
 
 interface CardProductProps {
   product: Product
@@ -13,9 +14,20 @@ interface CardPromotionProps {
 
 interface CardCartProps {
   product: Product
+  quantity: number
+  onIncrease: () => void
+  onDecrease: () => void
+  onRemove: () => void
 }
 
 export const CardProduct = ({ product }: CardProductProps) => {
+  const { addToCart, getItemQuantity } = UseCart()
+  const itemQuantity = getItemQuantity(product.id)
+
+  const handleAddToCart = () => {
+    addToCart(product)
+  }
+
   return (
     <div className="bg-white rounded-2xl shadow-md hover:shadow-xl hover:-translate-y-2 transition-all duration-300 overflow-hidden flex flex-col">
       <figure className="relative w-full h-40 md:h-56">
@@ -35,18 +47,35 @@ export const CardProduct = ({ product }: CardProductProps) => {
         </p>
         <div className="flex flex-col md:flex-row gap-2 md:gap-4 mt-2 justify-between">
           <span className="text-amber-500 text-sm md:text-lg font-bold">
-            ฿{product.price}
+            ฿{product.price.toLocaleString()}
           </span>
-          <CartButton onClick={() => console.log("")}></CartButton>
+
+          <CartButton onClick={handleAddToCart}>
+            <div className="flex justify-center gap-2 items-center">
+              <span>เพิ่ม</span>
+              {itemQuantity > 0 && (
+                <span className="min-w-[20px] h-5 px-1 flex items-center justify-center text-xs bg-amber-100 text-amber-800 rounded-full">
+                  {itemQuantity}
+                </span>
+              )}
+            </div>
+          </CartButton>
         </div>
       </div>
     </div>
   )
 }
 
-export const CardCart = ({ product }: CardCartProps) => {
+export const CardCart = ({
+  product,
+  quantity,
+  onIncrease,
+  onDecrease,
+  onRemove,
+}: CardCartProps) => {
+  const totalPrice = product.price * quantity
   return (
-    <div className="flex justify-between items-center">
+    <div className="flex justify-between items-center px-4 md:px-6">
       <div className="flex items-center gap-4">
         <figure className="relative h-18 w-18 md:h-20 md:w-20">
           <Image
@@ -57,19 +86,38 @@ export const CardCart = ({ product }: CardCartProps) => {
           />
         </figure>
         <div>
-          <h3 className="text-lg font-medium">{product.name}</h3>
+          <h3 className="text-sm md:text-lg font-medium leading-tight">
+            {product.name}
+          </h3>
           <span className="text-xs md:text-sm text-gray-600">
-            ฿{product.price} / ชิ้น
+            ฿{product.price.toLocaleString()} / ชิ้น
           </span>
         </div>
       </div>
-      <div className="flex items-center justify-between gap-16">
-        <div className="flex items-center justify-between gap-4">
-          <IncreaseButton onClick={() => console.log("Increase Button")} />
-          <div>1</div>
-          <DecreaseButton onClick={() => console.log("Decrease button")} />
+      <div className="flex items-center justify-between w-44 md:w-60 gap-4 md:gap-14">
+        <div className="flex items-center justify-between gap-2 md:gap-4">
+          <DecreaseButton onClick={onDecrease} />
+          <div>{quantity.toLocaleString()}</div>
+          <IncreaseButton onClick={onIncrease} />
         </div>
-        <p className="font-medium">฿350</p>
+        <div className="text-right">
+          <p className="font-medium">฿{totalPrice.toLocaleString()}</p>
+          <button
+            onClick={onRemove}
+            className="text-red-500 text-xs hover:text-red-700">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="size-4">
+              <path
+                fillRule="evenodd"
+                d="M16.5 4.478v.227a48.816 48.816 0 0 1 3.878.512.75.75 0 1 1-.256 1.478l-.209-.035-1.005 13.07a3 3 0 0 1-2.991 2.77H8.084a3 3 0 0 1-2.991-2.77L4.087 6.66l-.209.035a.75.75 0 0 1-.256-1.478A48.567 48.567 0 0 1 7.5 4.705v-.227c0-1.564 1.213-2.9 2.816-2.951a52.662 52.662 0 0 1 3.369 0c1.603.051 2.815 1.387 2.815 2.951Zm-6.136-1.452a51.196 51.196 0 0 1 3.273 0C14.39 3.05 15 3.684 15 4.478v.113a49.488 49.488 0 0 0-6 0v-.113c0-.794.609-1.428 1.364-1.452Zm-.355 5.945a.75.75 0 1 0-1.5.058l.347 9a.75.75 0 1 0 1.499-.058l-.346-9Zm5.48.058a.75.75 0 1 0-1.498-.058l-.347 9a.75.75 0 0 0 1.5.058l.345-9Z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
   )

@@ -16,6 +16,7 @@ interface CategoryButtonProps {
 }
 
 interface CartButtonProps {
+  children: React.ReactNode
   onClick: () => void
   href?: string
   className?: string
@@ -77,6 +78,7 @@ export const CategoryButton = ({
 }
 
 export const CartButton = ({
+  children,
   onClick,
   href,
   className = "",
@@ -85,13 +87,13 @@ export const CartButton = ({
   if (href) {
     return (
       <Link href={href} className={buttonClass}>
-        เพิ่ม
+        {children}
       </Link>
     )
   }
   return (
     <button onClick={onClick} className={buttonClass}>
-      เพิ่ม
+      {children}
     </button>
   )
 }
@@ -100,7 +102,7 @@ export const IncreaseButton = ({ onClick }: IncreaseButtonProps) => {
   return (
     <button
       onClick={onClick}
-      className="bg-gray-200 p-2 rounded-full cursor-pointer hover:bg-gray-300">
+      className="bg-gray-200 p-1 md:p-2 rounded-full cursor-pointer hover:bg-gray-300">
       <span>
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -122,7 +124,7 @@ export const DecreaseButton = ({ onClick }: DecreaseButtonProps) => {
   return (
     <button
       onClick={onClick}
-      className="bg-gray-200 p-2 rounded-full cursor-pointer hover:bg-gray-300">
+      className="bg-gray-200 p-1 md:p-2 rounded-full cursor-pointer hover:bg-gray-300">
       <span>
         <svg
           xmlns="http://www.w3.org/2000/svg"
