@@ -1,8 +1,9 @@
 "use client"
 import { Product } from "@/types/product_type"
-import { CardProduct } from "./Card"
+import { CardCart, CardProduct } from "./Card"
 import { CategoryButton } from "./Button"
 import { Category } from "@/types/category_type"
+import { CartItem } from "@/types/cart_type"
 
 interface ProductListProps {
   products: Product[]
@@ -10,6 +11,13 @@ interface ProductListProps {
 
 interface CategoryListProps {
   categories: Category[]
+}
+
+interface CardListProps {
+  cartItems: CartItem[]
+  onIncrease: (productId: number) => void
+  onDecrease: (productId: number) => void
+  onRemove: (productId: number) => void
 }
 
 export const SuggestList = ({ products }: ProductListProps) => {
@@ -45,6 +53,39 @@ export const CategoryList = ({ categories }: CategoryListProps) => {
           className={c.className || ""}
         />
       ))}
+    </div>
+  )
+}
+
+export const CartList = ({
+  cartItems,
+  onIncrease,
+  onDecrease,
+  onRemove,
+}: CardListProps) => {
+  if (cartItems.length === 0) {
+    return (
+      <div className="bg-white rounded-2xl p-4 md;p-6 text-center">
+        <p className="text-gray-500">ตะกร้าของคุณว่างเปล่า</p>
+      </div>
+    )
+  }
+  return (
+    <div className="bg-white rounded-2xl py-4 md:py-6">
+      <div className="flex flex-col gap-2">
+        {cartItems.map((item) => (
+          <div key={item.id}>
+            <CardCart
+              product={item}
+              quantity={item.quantity}
+              onIncrease={() => onIncrease(item.id)}
+              onDecrease={() => onDecrease(item.id)}
+              onRemove={() => onRemove(item.id)}
+            />
+            <hr className="text-gray-200 mt-2 mb-4" />
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

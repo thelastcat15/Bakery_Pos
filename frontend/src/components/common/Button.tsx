@@ -16,9 +16,18 @@ interface CategoryButtonProps {
 }
 
 interface CartButtonProps {
+  children: React.ReactNode
   onClick: () => void
   href?: string
   className?: string
+}
+
+interface IncreaseButtonProps {
+  onClick: () => void
+}
+
+interface DecreaseButtonProps {
+  onClick: () => void
 }
 
 export const PrimaryButton = ({
@@ -69,6 +78,7 @@ export const CategoryButton = ({
 }
 
 export const CartButton = ({
+  children,
   onClick,
   href,
   className = "",
@@ -77,13 +87,57 @@ export const CartButton = ({
   if (href) {
     return (
       <Link href={href} className={buttonClass}>
-        เพิ่ม
+        {children}
       </Link>
     )
   }
   return (
     <button onClick={onClick} className={buttonClass}>
-      เพิ่ม
+      {children}
+    </button>
+  )
+}
+
+export const IncreaseButton = ({ onClick }: IncreaseButtonProps) => {
+  return (
+    <button
+      onClick={onClick}
+      className="bg-gray-200 p-1 md:p-2 rounded-full cursor-pointer hover:bg-gray-300">
+      <span>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          className="size-4">
+          <path
+            fillRule="evenodd"
+            d="M12 3.75a.75.75 0 0 1 .75.75v6.75h6.75a.75.75 0 0 1 0 1.5h-6.75v6.75a.75.75 0 0 1-1.5 0v-6.75H4.5a.75.75 0 0 1 0-1.5h6.75V4.5a.75.75 0 0 1 .75-.75Z"
+            clipRule="evenodd"
+          />
+        </svg>
+      </span>
+    </button>
+  )
+}
+
+export const DecreaseButton = ({ onClick }: DecreaseButtonProps) => {
+  return (
+    <button
+      onClick={onClick}
+      className="bg-gray-200 p-1 md:p-2 rounded-full cursor-pointer hover:bg-gray-300">
+      <span>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          className="size-4">
+          <path
+            fillRule="evenodd"
+            d="M4.25 12a.75.75 0 0 1 .75-.75h14a.75.75 0 0 1 0 1.5H5a.75.75 0 0 1-.75-.75Z"
+            clipRule="evenodd"
+          />
+        </svg>
+      </span>
     </button>
   )
 }
