@@ -2,9 +2,11 @@ import Link from "next/link"
 
 interface ButtonProps {
   children: React.ReactNode
-  onClick: () => void
+  onClick?: () => void
   href?: string
   className?: string
+  type?: "button" | "submit" | "reset"
+  disabled?: boolean
 }
 
 interface CategoryButtonProps {
@@ -35,8 +37,12 @@ export const PrimaryButton = ({
   onClick,
   href,
   className = "",
+  type = "button",
+  disabled = false,
 }: ButtonProps) => {
-  const buttonClass = `bg-amber-500 hover:bg-amber-600 text-white px-8 py-3 rounded-full font-medium transition-colors ${className}`
+  const buttonClass = `bg-amber-500 hover:bg-amber-600 text-white px-8 py-3 rounded-full font-medium transition-colors ${
+    disabled ? "opacity-50 cursor-not-allowed hover:bg-amber-500" : ""
+  } ${className}`
 
   if (href) {
     return (
@@ -46,7 +52,11 @@ export const PrimaryButton = ({
     )
   }
   return (
-    <button onClick={onClick} className={buttonClass}>
+    <button
+      onClick={onClick}
+      className={buttonClass}
+      type={type}
+      disabled={disabled}>
       {children}
     </button>
   )
