@@ -1,15 +1,10 @@
 package routes
 
 import (
-	"errors"
-	"strings"
-	"time"
-
-	"Bakery_Pos/backend/module/db"
-	"Bakery_Pos/backend/models"
+	"Bakery_Pos/db"
+	"Bakery_Pos/models"
 
 	"github.com/gofiber/fiber/v2"
-	"gorm.io/gorm"
 )
 
 

@@ -1,8 +1,8 @@
 package routes
 
 import (
-	"Bakery_Pos/backend/db"
-	"Bakery_Pos/backend/models"
+	"Bakery_Pos/db"
+	"Bakery_Pos/models"
 	"errors"
 	"github.com/gofiber/fiber/v2"
 	"golang.org/x/crypto/bcrypt"
@@ -12,14 +12,13 @@ import (
 )
 
 func RegisterHandler(c *fiber.Ctx) error {
-	var req models.RegisterRequest // Use model from models folder
+	var req models.RegisterRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid request payload",
 		})
 	}
 
-	// Validate required fields
 	if req.Username == "" || req.Email == "" || req.Password == "" || req.Role == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "All fields are required",
@@ -68,6 +67,9 @@ func RegisterHandler(c *fiber.Ctx) error {
 		})
 	}
 
+	// TODO: Generate JWT token here and assign to tokenString
+	tokenString := "" // ...implement JWT generation...
+
 	EXP := time.Now().Add(24 * time.Hour)
 
 	c.Cookie(&fiber.Cookie{
@@ -82,11 +84,11 @@ func RegisterHandler(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"message": "Register successful",
 		"user": fiber.Map{
-			"userid":        newUser.ID,
-			"role":          newUser.Role,
-			"name":          newUser.Name,
-			"username":      newUser.Username,
-			"exp":           EXP.Unix(),
-		}
+			"userid":   newUser.ID,
+			"role":     newUser.Role,
+			"name":     newUser.Name,
+			"username": newUser.Username,
+			"exp":      EXP.Unix(),
+		},
 	})
 }
