@@ -95,6 +95,7 @@ export const RegisterForm = () => {
         )}
       </div>
       <PrimaryButton
+        className="w-full mt-4"
         type="submit"
         disabled={!passwordMatch || !formData.password1 || !formData.password2}>
         สมัครสมาชิก

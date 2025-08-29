@@ -41,7 +41,9 @@ export const PrimaryButton = ({
   disabled = false,
 }: ButtonProps) => {
   const buttonClass = `bg-amber-500 hover:bg-amber-600 text-white px-8 py-3 rounded-full font-medium transition-colors ${
-    disabled ? "opacity-50 cursor-not-allowed hover:bg-amber-500" : ""
+    disabled
+      ? "opacity-50 cursor-not-allowed hover:bg-amber-500"
+      : "cursor-pointer"
   } ${className}`
 
   if (href) {
