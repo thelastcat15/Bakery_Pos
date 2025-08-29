@@ -1,6 +1,6 @@
 "use client"
 import { Product } from "@/types/product_type"
-import { CardProduct } from "./Card"
+import { CardCart, CardProduct } from "./Card"
 import { CategoryButton } from "./Button"
 import { Category } from "@/types/category_type"
 
@@ -10,6 +10,10 @@ interface ProductListProps {
 
 interface CategoryListProps {
   categories: Category[]
+}
+
+interface CardListProps {
+  products: Product[]
 }
 
 export const SuggestList = ({ products }: ProductListProps) => {
@@ -45,6 +49,21 @@ export const CategoryList = ({ categories }: CategoryListProps) => {
           className={c.className || ""}
         />
       ))}
+    </div>
+  )
+}
+
+export const CartList = ({ products }: CardListProps) => {
+  return (
+    <div className="bg-white rounded-2xl p-4 md:p-6">
+      <div className="flex flex-col gap-2">
+        {products.map((p) => (
+          <div key={p.id}>
+            <CardCart product={p} />
+            <hr className="text-gray-200 mt-2 mb-4" />
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

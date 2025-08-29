@@ -1,6 +1,6 @@
 import { Product } from "@/types/product_type"
 import Image from "next/image"
-import { CartButton } from "./Button"
+import { CartButton, DecreaseButton, IncreaseButton } from "./Button"
 
 interface CardProductProps {
   product: Product
@@ -11,6 +11,10 @@ interface CardPromotionProps {
   promotion?: string
 }
 
+interface CardCartProps {
+  product: Product
+}
+
 export const CardProduct = ({ product }: CardProductProps) => {
   return (
     <div className="bg-white rounded-2xl shadow-md hover:shadow-xl hover:-translate-y-2 transition-all duration-300 overflow-hidden flex flex-col">
@@ -19,7 +23,7 @@ export const CardProduct = ({ product }: CardProductProps) => {
           src={product.image}
           alt={product.name}
           fill
-          className="object-cover  hover:shadow-xl hover:scale-[1.02] transition-all duration-300"
+          className="object-cover hover:shadow-xl hover:scale-[1.02] transition-all duration-300"
         />
       </figure>
       <div className="p-3 md:p-4 flex flex-col flex-1">
@@ -35,6 +39,37 @@ export const CardProduct = ({ product }: CardProductProps) => {
           </span>
           <CartButton onClick={() => console.log("")}></CartButton>
         </div>
+      </div>
+    </div>
+  )
+}
+
+export const CardCart = ({ product }: CardCartProps) => {
+  return (
+    <div className="flex justify-between items-center">
+      <div className="flex items-center gap-4">
+        <figure className="relative h-18 w-18 md:h-20 md:w-20">
+          <Image
+            src={product.image}
+            alt={product.name}
+            fill
+            className="object-cover p-1 rounded-lg"
+          />
+        </figure>
+        <div>
+          <h3 className="text-lg font-medium">{product.name}</h3>
+          <span className="text-xs md:text-sm text-gray-600">
+            ฿{product.price} / ชิ้น
+          </span>
+        </div>
+      </div>
+      <div className="flex items-center justify-between gap-16">
+        <div className="flex items-center justify-between gap-4">
+          <IncreaseButton onClick={() => console.log("Increase Button")} />
+          <div>1</div>
+          <DecreaseButton onClick={() => console.log("Decrease button")} />
+        </div>
+        <p className="font-medium">฿350</p>
       </div>
     </div>
   )
