@@ -103,3 +103,70 @@ export const RegisterForm = () => {
     </form>
   )
 }
+
+export const LoginForm = () => {
+  const [formData, setFormData] = useState({
+    username: "",
+    password: "",
+  })
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+
+    console.log("Form submitted:", {
+      username: formData.username,
+      password: formData.password,
+    })
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <div className="mb-4">
+        <label htmlFor="username" className="block text-sm font-medium mb-2">
+          Username
+        </label>
+        <input
+          type="text"
+          name="username"
+          id="username"
+          placeholder="Username"
+          value={formData.username}
+          onChange={handleInputChange}
+          required
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+        />
+      </div>
+
+      <div className="mb-4">
+        <label htmlFor="password1" className="block text-sm font-medium mb-2">
+          Password
+        </label>
+        <input
+          type="password"
+          name="password"
+          id="password"
+          placeholder="รหัสผ่าน"
+          value={formData.password}
+          onChange={handleInputChange}
+          required
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+        />
+      </div>
+
+      <PrimaryButton
+        className="w-full mt-4"
+        type="submit"
+        disabled={!formData.username || !formData.password}>
+        เข้าสู่ระบบ
+      </PrimaryButton>
+    </form>
+  )
+}
