@@ -14,7 +14,7 @@ export interface Order {
   id: string
   date: string
   items: OrderItem[]
-  cutomerInfo: CustomerInfo
+  customerInfo: CustomerInfo
   total: number
   status: "pending" | "confirmed" | "shipping" | "delivered"
   paymentSlip?: File | string
