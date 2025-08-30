@@ -2,6 +2,7 @@ import { Product } from "@/types/product_type"
 import Image from "next/image"
 import { CartButton, DecreaseButton, IncreaseButton } from "./Button"
 import { UseCart } from "@/hooks/useCart"
+import { Order } from "@/types/order_type"
 
 interface CardProductProps {
   product: Product
@@ -118,6 +119,54 @@ export const CardCart = ({
             </svg>
           </button>
         </div>
+      </div>
+    </div>
+  )
+}
+
+const statusConfig = {
+  all: { label: "ทั้งหมด", color: "bg-gray-100 text-gray-700" },
+  pending: { label: "รอยืนยัน", color: "bg-orange-100 text-orange-700" },
+  confirmed: { label: "ยืนยันแล้ว", color: "bg-blue-100 text-blue-700" },
+  shipping: { label: "กำลังจัดส่ง", color: "bg-yellow-100 text-yellow-700" },
+  delivered: { label: "จัดส่งสำเร็จ", color: "bg-green-100 text-green-700" },
+}
+
+interface OrderProps {
+  order: Order
+}
+
+export const OrderCard = ({ order }: OrderProps) => {
+  const statusStyle = statusConfig[order.status]
+
+  return (
+    <div className="bg-white rounded-2xl p-4 md:p-6 shadow-md hover:shadow-lg transition-shadow">
+      <div className="flex justify-between items-start">
+        <div>
+          <h3 className="font-semibold">#{order.id}</h3>
+          <p className="text-sm text-gray-500">{order.date}</p>
+        </div>
+        <span
+          className={`px-3 py-1 rounded-full text-xs font-medium ${statusStyle.color}`}>
+          {statusStyle.label}
+        </span>
+      </div>
+
+      <div className="mb-3">
+        <p className="text-sm text-gray-600 mb-1">รายการสินค้า:</p>
+        <ul className="text-sm">
+          {order.items.map((item, index) => (
+            <li key={index} className="text-gray-700">
+              • {item.name} x{item.quantity}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="flex justify-between items-center pt-3 border-t border-gray-100">
+        <span className="font-semibold text-amber-500">
+          ฿{order.total.toLocaleString()}
+        </span>
       </div>
     </div>
   )
