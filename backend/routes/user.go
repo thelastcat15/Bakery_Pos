@@ -3,6 +3,7 @@ package routes
 import (
 	"Bakery_Pos/db"
 	"Bakery_Pos/models"
+	"Bakery_Pos/module"
 	"errors"
 	"github.com/gofiber/fiber/v2"
 	"golang.org/x/crypto/bcrypt"
@@ -12,51 +13,32 @@ import (
 )
 
 func RegisterHandler(c *fiber.Ctx) error {
-	var req models.RegisterRequest
+	var req models.FormRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid request payload",
 		})
 	}
 
-	if req.Username == "" || req.Email == "" || req.Password == "" || req.Role == "" {
+	if req.Username == "" || req.Password == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "All fields are required",
 		})
 	}
 
-	// Check if email already exists
-	var existingUser models.User
-	err := db.DB.Where("email = ?", req.Email).First(&existingUser).Error
-	if err == nil {
-		return c.Status(fiber.StatusConflict).JSON(fiber.Map{
-			"error": "Email already in use",
-		})
-	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to query database",
-		})
-	}
-
-	// Hash password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to hash password",
-		})
+		return nil, err
 	}
-
-	// Create new user
-	newUser := models.User{
+	user := &models.User{
 		Username: req.Username,
-		Email:    req.Email,
 		Password: string(hashedPassword),
-		Role:     req.Role, // Use provided role
-		Name:     req.Username,
+	}
+	if err := db.DB.Create(user).Error; err != nil {
+		return nil, err
 	}
 
 	if err := db.DB.Create(&newUser).Error; err != nil {
-		// Example for Postgres
 		if strings.Contains(err.Error(), "duplicate key") {
 			return c.Status(fiber.StatusConflict).JSON(fiber.Map{
 				"error": "Email already in use",
@@ -67,10 +49,8 @@ func RegisterHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	// TODO: Generate JWT token here and assign to tokenString
-	tokenString := "" // ...implement JWT generation...
-
 	EXP := time.Now().Add(24 * time.Hour)
+	tokenString := module.GenerateJWT(user, EXP)
 
 	c.Cookie(&fiber.Cookie{
 		Name:     "Authorization",
@@ -88,6 +68,61 @@ func RegisterHandler(c *fiber.Ctx) error {
 			"role":     newUser.Role,
 			"name":     newUser.Name,
 			"username": newUser.Username,
+			"exp":      EXP.Unix(),
+		},
+	})
+}
+
+
+func LoginHandler(c *fiber.Ctx) error {
+	var req models.FormRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid request payload",
+		})
+	}
+
+	var user models.User
+	if err := db.DB.Where("username = ?", req.Username).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"error": "Invalid username or password",
+			})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Database error",
+		})
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Invalid username or password",
+		})
+	}
+
+	EXP := time.Now().Add(24 * time.Hour)
+	tokenString, err := module.GenerateJWT(user, EXP)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to generate token",
+		})
+	}
+
+	c.Cookie(&fiber.Cookie{
+		Name:     "Authorization",
+		Value:    "Bearer " + tokenString,
+		Expires:  EXP,
+		HTTPOnly: true,
+		Secure:   true,
+		SameSite: "None",
+	})
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Login successful",
+		"user": fiber.Map{
+			"userid":   user.ID,
+			"role":     user.Role,
+			"username": user.Username,
 			"exp":      EXP.Unix(),
 		},
 	})

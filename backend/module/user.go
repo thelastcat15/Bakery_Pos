@@ -1,31 +1,24 @@
 package module
 
 import (
-	"Bakery_Pos/db"
 	"Bakery_Pos/models"
-	"golang.org/x/crypto/bcrypt"
+	"github.com/golang-jwt/jwt/v5"
+	"time"
 )
 
+var jwtKey = []byte("your_secret_key") // Replace with your secret key
 
-func CreateUser(req models.RegisterRequest) (*models.User, error) {
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+func GenerateJWT(User models.User, exp time.Time) (string, error) {
+	claims := jwt.MapClaims{
+		"user_id": User.ID,
+		"username": User.Username,
+		"role": User.Role,
+		"exp": exp.Unix(),
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString(jwtKey)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	user := &models.User{
-		Username: req.Username,
-		Email:    req.Email,
-		Password: string(hashedPassword),
-		Role:     req.Role,
-		Name:     req.Username,
-	}
-	if err := db.DB.Create(user).Error; err != nil {
-		return nil, err
-	}
-	return user, nil
-}
-
-func CheckPasswordHash(hashedPassword, password string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
-	return err == nil
+	return tokenString, nil
 }

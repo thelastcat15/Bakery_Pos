@@ -1,0 +1,40 @@
+# Go build
+/backend/bin/
+/backend/build/
+*.exe
+*.out
+
+# Dependency directories
+/backend/vendor/
+
+# IDE/editor folders
+.vscode/
+.idea/
+
+# Environment files
+*.env*
+
+# Node/Next.js/Frontend
+/frontend/node_modules
+/frontend/.pnp
+/frontend/.pnp.*
+/frontend/.yarn/*
+!/frontend/.yarn/patches
+!/frontend/.yarn/plugins
+!/frontend/.yarn/releases
+!/frontend/.yarn/versions
+/frontend/coverage
+/frontend/.next/
+/frontend/out/
+/frontend/build
+/frontend/.DS_Store
+/frontend/*.pem
+/frontend/npm-debug.log*
+/frontend/yarn-debug.log*
+/frontend/yarn-error.log*
+/frontend/.pnpm-debug.log*
+/frontend/.env*
+/frontend/.vercel
+/frontend/*.tsbuildinfo
+/frontend/next-env.d.ts
+/frontend/types/

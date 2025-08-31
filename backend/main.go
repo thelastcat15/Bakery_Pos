@@ -17,17 +17,35 @@ func main() {
 		log.Println("No .env file found, skipping...")
 	}
 
-	db.Connect()
+	db.Connect_DB()
+	db.Connect_Storage()
 
 	app := fiber.New()
 	app.Use(cors.New())
 
 	api := app.Group("/api")
 
-	product := api.Group("/products")
+	product := api.Group("/user")
+	product.Post("/login", routes.LoginHandler)
+	product.Get("/register", routes.RegisterHandler)
+	// product.Get("/setting", routes.SettingHandler)
+
+	product := api.Group("/product")
 	product.Post("/", routes.CreateProduct)
 	product.Get("/", routes.GetProducts)
 	product.Get("/:id", routes.GetProductByID)
+
+	cart := api.Group("/cart", middleware.Auth)
+	cart.Get("/", routes.GetCart)
+	cart.Post("/", routes.AddToCart)
+	cart.Delete("/", routes.DeleteCart)
+	cart.Put("/:product_id", routes.UpdateProductCart)
+	cart.Delete("/:product_id", routes.DeleteProductCart)
+	cart.Post("/checkout", routes.Checkout)
+
+	order := api.Group("/order", middleware.Auth)
+	order.Get("/", routes.GetAllOrders)
+	order.Get("/:order_id", routes.GetOrder)
 
 	admin := api.Group("/admin", middleware.Auth, middleware.Admin)
 	// admin.Post("/edit-stock", routes.EditStock)
