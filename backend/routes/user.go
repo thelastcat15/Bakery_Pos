@@ -83,7 +83,7 @@ func LoginHandler(c *fiber.Ctx) error {
 	}
 
 	var user models.User
-	if err := db.DB.Where("username = ?", req.Username).First(&user).Error; err != nil {
+	if err := db.DB.Where("user_id = ?", req.Username).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 				"error": "Invalid username or password",

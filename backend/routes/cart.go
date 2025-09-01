@@ -6,6 +6,59 @@ import (
 	"yourapp/models"
 )
 
+func GetCart(c *fiber.Ctx) error {
+	userID := c.Locals("userid").(string)
+
+	var cart models.Cart
+	err := models.DB.Preload("Items.Product").Where("user_id = ?", userID).First(&cart).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			// Create new cart for user
+			cart = models.Cart{
+				UserID: userID,
+			}
+			if err := models.DB.Create(&cart).Error; err != nil {
+				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+					"error": "Failed to create cart",
+				})
+			}
+		} else {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "Database error",
+			})
+		}
+	}
+
+	var items []fiber.Map
+	for _, item := range cart.Items {
+		price := item.Product.Price
+		if item.Product.IsOnSale && item.Product.SalePrice != nil {
+			price = *item.Product.SalePrice
+		}
+
+		itemMap := fiber.Map{
+			"product_id":   item.ProductID,
+			"product_name": item.Product.Name,
+			"quantity":     item.Quantity,
+			"price":        item.Product.Price,
+			"subtotal":     float64(item.Quantity) * price,
+		}
+
+		if item.Product.IsOnSale && item.Product.SalePrice != nil {
+			itemMap["sale_price"] = *item.Product.SalePrice
+		}
+
+		items = append(items, itemMap)
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"cart_id": cart.ID,
+		"user_id": cart.UserID,
+		"items":   items,
+	})
+}
+
+
 func Checkout(c *fiber.Ctx) error {
 	userID := c.Locals("userid").(uint)
 

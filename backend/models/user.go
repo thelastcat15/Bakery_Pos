@@ -1,10 +1,13 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"github.com/google/uuid"
+	"gorm.io/gorm"
+)
 
 type User struct {
-  gorm.Model
-	ID       		uint   		`gorm:"primaryKey"`
+  	gorm.Model
+	ID       		uint   		`gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
 	Username 		string 		`gorm:"unique;not null"`
 	Password 		string 		`gorm:"not null"`
 	Role     		string 		`gorm:"not null";default:member"`
@@ -12,3 +15,9 @@ type User struct {
 	Place       string
 }
 
+func (u *User) BeforeCreate(tx *gorm.DB) error {
+	if u.ID == uuid.Nil {
+		u.ID = uuid.New()
+	}
+	return nil
+}
