@@ -1,12 +1,16 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"github.com/google/uuid"
+	"gorm.io/gorm"
+)
 
 type Cart struct {
-    gorm.Model
-    ID 	   string `gorm:"primaryKey;index"`
-    UserID string `gorm:"unique;not null"`
-    Items  []CartItem `gorm:"foreignKey:CartID;constraint:OnDelete:CASCADE"`
+	gorm.Model
+	ID 	   		uuid.UUID 		`gorm:"primaryKey;index"`
+	UserID 		string 				`gorm:"unique;not null"`
+	User 			User 					`gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
+	Items  		[]CartItem 		`gorm:"foreignKey:CartID;constraint:OnDelete:CASCADE"`
 }
 
 type CartItem struct {

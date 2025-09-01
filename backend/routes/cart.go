@@ -3,7 +3,7 @@ package routes
 import (
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
-	"yourapp/models"
+	"Bakery_Pos/models"
 )
 
 func GetCart(c *fiber.Ctx) error {

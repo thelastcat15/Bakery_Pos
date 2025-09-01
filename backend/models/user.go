@@ -6,11 +6,11 @@ import (
 )
 
 type User struct {
-  	gorm.Model
-	ID       		uint   		`gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
-	Username 		string 		`gorm:"unique;not null"`
-	Password 		string 		`gorm:"not null"`
-	Role     		string 		`gorm:"not null";default:member"`
+  gorm.Model
+	ID       		uuid.UUID   		`gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
+	Username 		string 					`gorm:"unique;not null"`
+	Password 		string 					`gorm:"not null"`
+	Role     		string 					`gorm:"not null";default:member"`
 	PhoneNumber string
 	Place       string
 }
