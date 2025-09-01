@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from "react"
 import { CartItem } from "@/types/cart_type"
 import { Product } from "@/types/product_type"
+import { usePromotions } from "./usePromotions"
 
 const CART_STORAGE_KEY = "shopping_cart"
 
@@ -26,6 +27,7 @@ const loadCartFromStorage = (): CartItem[] => {
 export const UseCart = () => {
   const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [isLoaded, setIsLoaded] = useState(false)
+  const { getDiscountedPrice, getPriceDisplay } = usePromotions()
 
   // Load cart from localStorafe on mount
   useEffect(() => {
@@ -102,7 +104,10 @@ export const UseCart = () => {
   }, [])
 
   const getTotalItems = useCallback(() => {
-    return cartItems.reduce((total, item) => total + item.quantity, 0)
+    return cartItems.reduce((total, item) => {
+      const discountedPrice = getDiscountedPrice(item)
+      return total + discountedPrice * item.quantity
+    }, 0)
   }, [cartItems])
 
   const getTotalPrice = useCallback(() => {
@@ -112,6 +117,19 @@ export const UseCart = () => {
     )
   }, [cartItems])
 
+  const getOriginalTotalPrice = useCallback(() => {
+    return cartItems.reduce(
+      (total, item) => total + item.price * item.quantity,
+      0
+    )
+  }, [cartItems])
+
+  const getTotalSavings = useCallback(() => {
+    const originalTotal = getOriginalTotalPrice()
+    const discountedTotal = getTotalPrice()
+    return originalTotal - discountedTotal
+  }, [getOriginalTotalPrice, getTotalPrice])
+
   const getItemQuantity = useCallback(
     (productId: number) => {
       const item = cartItems.find((item) => item.id === productId)
@@ -119,6 +137,16 @@ export const UseCart = () => {
     },
     [cartItems]
   )
+
+  const getCartItemsWithPromotions = useCallback(() => {
+    return cartItems.map((item) => {
+      const priceDisplay = getPriceDisplay(item)
+      return {
+        ...item,
+        ...priceDisplay,
+      }
+    })
+  }, [cartItems, getPriceDisplay])
 
   return {
     cartItems,
@@ -130,7 +158,10 @@ export const UseCart = () => {
     clearCart,
     getTotalItems,
     getTotalPrice,
+    getOriginalTotalPrice,
+    getTotalSavings,
     getItemQuantity,
+    getCartItemsWithPromotions,
     isLoaded,
   }
 }
