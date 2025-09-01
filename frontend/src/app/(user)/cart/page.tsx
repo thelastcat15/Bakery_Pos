@@ -2,6 +2,7 @@
 import { PrimaryButton } from "@/components/common/Button"
 import { CartList } from "@/components/common/List"
 import { UseCart } from "@/hooks/useCart"
+import { usePromotions } from "@/hooks/usePromotions"
 
 const CartPage = () => {
   const {
@@ -11,11 +12,31 @@ const CartPage = () => {
     removeFromCart,
     getTotalItems,
     getTotalPrice,
+    getOriginalTotalPrice,
+    getTotalSavings,
     clearCart,
   } = UseCart()
 
+  const { getActiveAnnouncements } = usePromotions()
+  const announcements = getActiveAnnouncements()
+  const totalSavings = getTotalSavings()
+
   return (
     <div className="max-w-4xl mx-auto px-4 md:px-0 mt-4 md:mt-8">
+      {/* Promotion Annoucement */}
+      {announcements.length > 0 && (
+        <div className="mb-6 space-y-2">
+          {announcements.map((announcement, index) => (
+            <div
+              key={index}
+              className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+              <p className="text-amber-800 text-sm font-medium">
+                🎉 {announcement}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
       <div className="flex justify-between item-center mb-6">
         <h1 className="text-xl md:text-2xl font-bold">
           ตะกร้าสินค้า {getTotalItems().toLocaleString()} รายการ
@@ -46,11 +67,35 @@ const CartPage = () => {
 
       {cartItems.length > 0 && (
         <div className="mt-6 bg-white rounded-2xl p-4 md:p-6">
-          <div className="flex justify-between items-center mb-4">
-            <span className="text-lg font-semibold">รวมทั้งหมด</span>
-            <span className="text-xl font-bold text-amber-500">
-              ฿{getTotalPrice().toLocaleString()}
-            </span>
+          {/* Show savings if any */}
+          {totalSavings > 0 && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+              <div className="flex justify-center items-center">
+                <span className="text-green-800 font-medium">
+                  🎉 คุณประหยัดได้
+                </span>
+                <span className="text-green-600 font-bold">
+                  ฿{totalSavings.toLocaleString()}
+                </span>
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-2">
+            {totalSavings > 0 && (
+              <div className="flex justify-center items-center text-gray-600">
+                <span>ราคาปกติ</span>
+                <span className="line-through">
+                  ฿{getOriginalTotalPrice().toLocaleString()}
+                </span>
+              </div>
+            )}
+            <div className="flex justify-between items-center mb-4">
+              <span className="text-lg font-semibold">รวมทั้งหมด</span>
+              <span className="text-xl font-bold text-amber-500">
+                ฿{getTotalPrice().toLocaleString()}
+              </span>
+            </div>
           </div>
           <PrimaryButton
             onClick={() => console.log("Proceed to checkout")}

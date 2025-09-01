@@ -104,18 +104,16 @@ export const UseCart = () => {
   }, [])
 
   const getTotalItems = useCallback(() => {
+    return cartItems.reduce((total, item) => total + item.quantity, 0)
+  }, [cartItems])
+
+  // Updated to use promotional pricing
+  const getTotalPrice = useCallback(() => {
     return cartItems.reduce((total, item) => {
       const discountedPrice = getDiscountedPrice(item)
       return total + discountedPrice * item.quantity
     }, 0)
-  }, [cartItems])
-
-  const getTotalPrice = useCallback(() => {
-    return cartItems.reduce(
-      (total, item) => total + item.price * item.quantity,
-      0
-    )
-  }, [cartItems])
+  }, [cartItems, getDiscountedPrice])
 
   const getOriginalTotalPrice = useCallback(() => {
     return cartItems.reduce(

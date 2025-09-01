@@ -3,6 +3,7 @@ import Image from "next/image"
 import { CartButton, DecreaseButton, IncreaseButton } from "./Button"
 import { UseCart } from "@/hooks/useCart"
 import { Order } from "@/types/order_type"
+import { usePromotions } from "@/hooks/usePromotions"
 
 interface CardProductProps {
   product: Product
@@ -23,7 +24,9 @@ interface CardCartProps {
 
 export const CardProduct = ({ product }: CardProductProps) => {
   const { addToCart, getItemQuantity } = UseCart()
+  const { getPriceDisplay } = usePromotions()
   const itemQuantity = getItemQuantity(product.id)
+  const priceInfo = getPriceDisplay(product)
 
   const handleAddToCart = () => {
     addToCart(product)
@@ -39,6 +42,12 @@ export const CardProduct = ({ product }: CardProductProps) => {
           className="object-cover hover:shadow-xl hover:scale-[1.02] transition-all duration-300"
         />
       </figure>
+      {/* Discount badge */}
+      {priceInfo.hasDiscount && (
+        <div className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full font-bold">
+          -{priceInfo.discountPercentage}%
+        </div>
+      )}
       <div className="p-3 md:p-4 flex flex-col flex-1">
         <h3 className="font-semibold md:text-lg text-gray-900 truncate">
           {product.name}
@@ -47,9 +56,23 @@ export const CardProduct = ({ product }: CardProductProps) => {
           {product.detail}
         </p>
         <div className="flex flex-col md:flex-row gap-2 md:gap-4 mt-2 justify-between">
-          <span className="text-amber-500 text-sm md:text-lg font-bold">
-            ฿{product.price.toLocaleString()}
-          </span>
+          {/* Price display */}
+          <div className="flex gap-1">
+            {priceInfo.hasDiscount ? (
+              <>
+                <span className="text-gray-400 text-sx line-through">
+                  ฿{priceInfo.originalPrice.toLocaleString()}
+                </span>
+                <span className="text-green-600 text-sm md:text-lg font-bold">
+                  ฿{priceInfo.discountedPrice.toLocaleString()}
+                </span>
+              </>
+            ) : (
+              <span className="text-amber-500 text-sm md:text-lg font-bold">
+                ฿{product.price.toLocaleString()}
+              </span>
+            )}
+          </div>
 
           <CartButton onClick={handleAddToCart}>
             <div className="flex justify-center gap-2 items-center">
@@ -74,7 +97,11 @@ export const CardCart = ({
   onDecrease,
   onRemove,
 }: CardCartProps) => {
-  const totalPrice = product.price * quantity
+  const { getPriceDisplay } = usePromotions()
+  const priceInfo = getPriceDisplay(product)
+  const totalPrice = priceInfo.discountedPrice * quantity
+  const originalTotalPrice = priceInfo.originalPrice * quantity
+
   return (
     <div className="flex justify-between items-center px-4 md:px-6">
       <div className="flex items-center gap-4">
@@ -90,9 +117,24 @@ export const CardCart = ({
           <h3 className="text-sm md:text-lg font-medium leading-tight">
             {product.name}
           </h3>
-          <span className="text-xs md:text-sm text-gray-600">
-            ฿{product.price.toLocaleString()} / ชิ้น
-          </span>
+          {/* Price per item */}
+          <div className="text-xs md:text-sm text-gray-600">
+            {priceInfo.hasDiscount ? (
+              <div className="flex item-center gap-2">
+                <span className="line-through text-gray-600">
+                  ฿{priceInfo.originalPrice.toLocaleString()}
+                </span>
+                <span className="text-green-600 font-medium">
+                  ฿{priceInfo.discountedPrice.toLocaleString()}
+                </span>
+                <span className="text-xs bg-red-500 text-white px-1 rounded">
+                  -{priceInfo.discountPercentage}%
+                </span>
+              </div>
+            ) : (
+              <span>฿{product.price.toLocaleString()} / ชิ้น</span>
+            )}
+          </div>
         </div>
       </div>
       <div className="flex items-center justify-between w-44 md:w-60 gap-4 md:gap-14">
@@ -102,7 +144,19 @@ export const CardCart = ({
           <IncreaseButton onClick={onIncrease} />
         </div>
         <div className="text-right">
-          <p className="font-medium">฿{totalPrice.toLocaleString()}</p>
+          {/* Total price for this item */}
+          {priceInfo.hasDiscount ? (
+            <div>
+              <p className="text-xs text-gray-400 line-through">
+                ฿{originalTotalPrice.toLocaleString()}
+              </p>
+              <p className="font-medium text-green-600">
+                ฿{totalPrice.toLocaleString()}
+              </p>
+            </div>
+          ) : (
+            <p className="font-medium">฿{totalPrice.toLocaleString()}</p>
+          )}
           <button
             onClick={onRemove}
             className="text-red-500 text-xs hover:text-red-700">
