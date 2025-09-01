@@ -11,7 +11,7 @@ type User struct {
 	Username 		string 					`gorm:"unique;not null"`
 	Password 		string 					`gorm:"not null"`
 	Role     		string 					`gorm:"not null";default:member"`
-	PhoneNumber string
+	PhoneNumber string				  `gorm:"size:10"`
 	Place       string
 }
 
