@@ -28,7 +28,7 @@ func main() {
 	product := api.Group("/user")
 	product.Post("/login", routes.LoginHandler)
 	product.Get("/register", routes.RegisterHandler)
-	// product.Get("/setting", routes.SettingHandler)
+	product.Get("/setting", routes.UpdateSetting)
 
 	product := api.Group("/product")
 	product.Post("/", routes.CreateProduct)

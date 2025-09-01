@@ -127,3 +127,81 @@ func LoginHandler(c *fiber.Ctx) error {
 		},
 	})
 }
+
+func UpdateSetting(c *fiber.Ctx) error {
+	userID := c.Locals("userid").(string)
+	if userID == nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized",
+		})
+	}
+
+	var input models.FormSetting
+	if err := c.BodyParser(&input); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid request body",
+		})
+	}
+
+	var user models.User
+	if err := db.DB.First(&user, "id = ?", userID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"error": "User not found",
+			})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Database error",
+		})
+	}
+
+	updated := false
+	if input.PhoneNumber != nil {
+		phone := strings.TrimSpace(*input.PhoneNumber)
+		if len(phone) != 10 || !isDigitsOnly(phone) {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Phone number must be 10 digits",
+			})
+		}
+		user.PhoneNumber = phone
+		updated = true
+	}
+
+	if input.Place != nil {
+		place := strings.TrimSpace(*input.Place)
+		if place == "" {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Place cannot be empty",
+			})
+		}
+		user.Place = place
+		updated = true
+	}
+
+	if !updated {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "No fields to update",
+		})
+	}
+
+	// Save changes
+	if err := db.DB.Save(&user).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to update user",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "User updated successfully",
+		"user":    user,
+	})
+}
+
+func isDigitsOnly(s string) bool {
+	for _, r := range s {
+		if r < '0' || r > '9' {
+			return false
+		}
+	}
+	return true
+}
