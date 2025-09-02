@@ -6,6 +6,7 @@ import (
 	"Bakery_Pos/middleware"
 	"Bakery_Pos/db"
 	"Bakery_Pos/routes"
+	"Bakery_Pos/routes_admin"
 	"github.com/joho/godotenv"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -40,10 +41,12 @@ func main() {
 	user.Get("/register", routes.RegisterHandler)
 	user.Get("/setting", routes.UpdateSetting)
 
-	// product := api.Group("/product")
-	// product.Post("/", routes.CreateProduct)
-	// product.Get("/", routes.GetProducts)
-	// product.Get("/:id", routes.GetProductByID)
+	product := api.Group("/product")
+	product.Get("/", routes.GetProducts)
+	product.Get("/:id", routes.GetProductByID)
+	product.Post("/", middleware.Auth, middleware.Admin, routes_admin.CreateProduct)
+	product.Put("/:id", middleware.Auth, middleware.Admin, routes_admin.UpdateProduct)
+	product.Delete("/:id", middleware.Auth, middleware.Admin, routes_admin.DeleteProduct)
 
 	cart := api.Group("/cart", middleware.Auth)
 	cart.Get("/", routes.GetCart)
@@ -55,15 +58,10 @@ func main() {
 	// order.Get("/", routes.GetAllOrders)
 	// order.Get("/:order_id", routes.GetOrder)
 
-	// admin := api.Group("/admin", middleware.Auth, middleware.Admin)
+	admin := api.Group("/admin", middleware.Auth, middleware.Admin)
 	// admin.Post("/edit-stock", routes.EditStock)
 	// admin.Get("/dashboard", routes.ViewDashboard)
 	
-	// productAdmin := admin.Group("/products")
-	// productAdmin.Put("/:id", routes.UpdateProduct)
-	// productAdmin.Delete("/:id", routes.DeleteProduct)
-
-
   app.Get("/*", swagger.HandlerDefault)
 	app.Listen(":3000")
 }
