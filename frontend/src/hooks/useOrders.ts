@@ -12,9 +12,7 @@ const saveOrderToStorage = (orders: Order[]) => {
     }))
 
     const ordersData = JSON.stringify(ordersForStorage)
-
     // save to backend
-
     console.log("Orders would be saved to backend:", ordersForStorage)
   } catch (error) {
     console.error("Failed to save orders:", error)
@@ -23,7 +21,7 @@ const saveOrderToStorage = (orders: Order[]) => {
 
 const loadOrdersFromStorage = (): Order[] => {
   try {
-    // In real app, this would fetch from your backend API
+    // In real app, this would fetch from backend API
     return [
       {
         id: "ORD001",
@@ -55,6 +53,7 @@ const loadOrdersFromStorage = (): Order[] => {
         },
         total: 245,
         status: "confirmed",
+        paymentSlip: "https://example.com/payment-slips/slip-001.jpg", // URL ธรรมดา
         createdAt: new Date("2025-08-30"),
         updatedAt: new Date("2025-08-30"),
       },
@@ -88,8 +87,34 @@ const loadOrdersFromStorage = (): Order[] => {
         },
         total: 180,
         status: "shipping",
+        paymentSlip: "images/slips/slip.jpg", // URL ธรรมดา
         createdAt: new Date("2025-08-29"),
         updatedAt: new Date("2025-08-29"),
+      },
+      {
+        id: "ORD003",
+        date: "2025-08-28",
+        items: [
+          {
+            id: 3,
+            name: "โดนัท",
+            image: "/images/donut.jpg",
+            detail: "",
+            price: 60,
+            category: "cake",
+            quantity: 2,
+          },
+        ],
+        customerInfo: {
+          name: "ลูกค้า C",
+          phone: "083-456-7890",
+          address: "ขอนแก่น",
+        },
+        total: 120,
+        status: "pending",
+        paymentSlip: undefined, // ไม่มีสลิป
+        createdAt: new Date("2025-08-28"),
+        updatedAt: new Date("2025-08-28"),
       },
     ]
   } catch (error) {
@@ -147,6 +172,10 @@ export const useOrders = () => {
     []
   )
 
+  const deleteOrder = useCallback((orderId: string) => {
+    setOrders((prev) => prev.filter((order) => order.id !== orderId))
+  }, [])
+
   const getOrdersByStatus = useCallback(
     (status?: Order["status"]) => {
       if (!status) return orders
@@ -166,6 +195,7 @@ export const useOrders = () => {
     orders,
     createOrder,
     updateOrderStatus,
+    deleteOrder,
     getOrdersByStatus,
     getOrderById,
     isLoaded,
