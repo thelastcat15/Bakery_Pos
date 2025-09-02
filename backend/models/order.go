@@ -4,7 +4,7 @@ import "gorm.io/gorm"
 
 type Order struct {
 	gorm.Model
-	UserID 		uint 			`gorm:"not null;index"`
+	UserID 		string 			`gorm:"not null;index"`
 	OrderID 	uint 			`gorm:"not null;index"`
 	Total  		float64
 	Status 		string
