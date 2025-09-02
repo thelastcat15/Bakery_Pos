@@ -8,7 +8,7 @@ import (
 
 var jwtKey = []byte("your_secret_key") // Replace with your secret key
 
-func GenerateJWT(User models.User, exp time.Time) (string, error) {
+func GenerateJWT(User *models.User, exp time.Time) (string, error) {
 	claims := jwt.MapClaims{
 		"user_id": User.ID,
 		"username": User.Username,

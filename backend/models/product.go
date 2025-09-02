@@ -4,6 +4,7 @@ import "gorm.io/gorm"
 
 type Product struct {
 	gorm.Model
+	ID 					uint     `gorm:"primaryKey;index"`
 	Name        string   `json:"name" gorm:"type:varchar(255);not null"`
 	Description string   `json:"description" gorm:"type:text"`
 	Tag         string   `json:"tag" gorm:"not null"`

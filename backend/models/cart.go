@@ -7,7 +7,7 @@ import (
 
 type Cart struct {
 	gorm.Model
-	ID 	   		uuid.UUID 		`gorm:"primaryKey;index"`
+	ID 	   		string 				`gorm:"primaryKey;index"`
 	UserID 		string 				`gorm:"unique;not null"`
 	User 			User 					`gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
 	Items  		[]CartItem 		`gorm:"foreignKey:CartID;constraint:OnDelete:CASCADE"`
@@ -15,10 +15,10 @@ type Cart struct {
 
 type CartItem struct {
 	gorm.Model
-	CartID    uint    `gorm:"not null"`
-	ProductID uint    `gorm:"not null"`
-	Quantity  int     `gorm:"not null"`
-	Product   Product `gorm:"foreignKey:ProductID"`
+	CartID    string    `gorm:"not null"`
+	ProductID uint    	`gorm:"not null"`
+	Quantity  int     	`gorm:"not null"`
+	Product   Product 	`gorm:"foreignKey:ProductID"`
 }
 
 func (c *Cart) BeforeCreate(tx *gorm.DB) (err error) {

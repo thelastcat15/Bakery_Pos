@@ -25,35 +25,33 @@ func main() {
 
 	api := app.Group("/api")
 
-	product := api.Group("/user")
-	product.Post("/login", routes.LoginHandler)
-	product.Get("/register", routes.RegisterHandler)
-	product.Get("/setting", routes.UpdateSetting)
+	user := api.Group("/user")
+	user.Post("/login", routes.LoginHandler)
+	user.Get("/register", routes.RegisterHandler)
+	user.Get("/setting", routes.UpdateSetting)
 
-	product := api.Group("/product")
-	product.Post("/", routes.CreateProduct)
-	product.Get("/", routes.GetProducts)
-	product.Get("/:id", routes.GetProductByID)
+	// product := api.Group("/product")
+	// product.Post("/", routes.CreateProduct)
+	// product.Get("/", routes.GetProducts)
+	// product.Get("/:id", routes.GetProductByID)
 
 	cart := api.Group("/cart", middleware.Auth)
 	cart.Get("/", routes.GetCart)
-	cart.Post("/", routes.AddToCart)
-	cart.Delete("/", routes.DeleteCart)
+	// cart.Delete("/", routes.DeleteCart)
 	cart.Put("/:product_id", routes.UpdateProductCart)
-	cart.Delete("/:product_id", routes.DeleteProductCart)
 	cart.Post("/checkout", routes.Checkout)
 
-	order := api.Group("/order", middleware.Auth)
-	order.Get("/", routes.GetAllOrders)
-	order.Get("/:order_id", routes.GetOrder)
+	// order := api.Group("/order", middleware.Auth)
+	// order.Get("/", routes.GetAllOrders)
+	// order.Get("/:order_id", routes.GetOrder)
 
-	admin := api.Group("/admin", middleware.Auth, middleware.Admin)
+	// admin := api.Group("/admin", middleware.Auth, middleware.Admin)
 	// admin.Post("/edit-stock", routes.EditStock)
 	// admin.Get("/dashboard", routes.ViewDashboard)
 	
-	productAdmin := admin.Group("/products")
-	productAdmin.Put("/:id", routes.UpdateProduct)
-	productAdmin.Delete("/:id", routes.DeleteProduct)
+	// productAdmin := admin.Group("/products")
+	// productAdmin.Put("/:id", routes.UpdateProduct)
+	// productAdmin.Delete("/:id", routes.DeleteProduct)
 
 
 

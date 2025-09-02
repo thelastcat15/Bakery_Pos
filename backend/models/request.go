@@ -9,3 +9,7 @@ type FormSetting struct {
 	PhoneNumber *string `json:"phone_number"`
 	Place       *string `json:"place"`
 }
+
+type FormEditCart struct {
+	QuantityChange int `json:"quantity_change"`
+}

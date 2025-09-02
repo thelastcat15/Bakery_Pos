@@ -26,22 +26,25 @@ func RegisterHandler(c *fiber.Ctx) error {
 		})
 	}
 
+	// Hash password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return nil, err
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to hash password",
+		})
 	}
+
+	// Create user struct
 	user := &models.User{
 		Username: req.Username,
 		Password: string(hashedPassword),
 	}
-	if err := db.DB.Create(user).Error; err != nil {
-		return nil, err
-	}
 
-	if err := db.DB.Create(&newUser).Error; err != nil {
+	// Save user to DB
+	if err := db.DB.Create(user).Error; err != nil {
 		if strings.Contains(err.Error(), "duplicate key") {
 			return c.Status(fiber.StatusConflict).JSON(fiber.Map{
-				"error": "Email already in use",
+				"error": "Username already in use",
 			})
 		}
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -49,9 +52,16 @@ func RegisterHandler(c *fiber.Ctx) error {
 		})
 	}
 
+	// Generate token
 	EXP := time.Now().Add(24 * time.Hour)
-	tokenString := module.GenerateJWT(user, EXP)
+	tokenString, err := module.GenerateJWT(user, EXP)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to generate token",
+		})
+	}
 
+	// Set cookie
 	c.Cookie(&fiber.Cookie{
 		Name:     "Authorization",
 		Value:    "Bearer " + tokenString,
@@ -61,17 +71,18 @@ func RegisterHandler(c *fiber.Ctx) error {
 		SameSite: "None",
 	})
 
+	// Return response
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"message": "Register successful",
 		"user": fiber.Map{
-			"userid":   newUser.ID,
-			"role":     newUser.Role,
-			"name":     newUser.Name,
-			"username": newUser.Username,
+			"userid":   user.ID,
+			"role":     user.Role,
+			"username": user.Username,
 			"exp":      EXP.Unix(),
 		},
 	})
 }
+
 
 
 func LoginHandler(c *fiber.Ctx) error {
@@ -101,7 +112,7 @@ func LoginHandler(c *fiber.Ctx) error {
 	}
 
 	EXP := time.Now().Add(24 * time.Hour)
-	tokenString, err := module.GenerateJWT(user, EXP)
+	tokenString, err := module.GenerateJWT(&user, EXP)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to generate token",
@@ -130,11 +141,6 @@ func LoginHandler(c *fiber.Ctx) error {
 
 func UpdateSetting(c *fiber.Ctx) error {
 	userID := c.Locals("userid").(string)
-	if userID == nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Unauthorized",
-		})
-	}
 
 	var input models.FormSetting
 	if err := c.BodyParser(&input); err != nil {
