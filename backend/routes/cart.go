@@ -1,6 +1,7 @@
 package routes
 
 import (
+  "strconv"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 	"Bakery_Pos/models"
@@ -62,7 +63,7 @@ func UpdateProductCart(c *fiber.Ctx) error {
 		})
 	}
 
-	var body model.FormEditCart
+	var body models.FormEditCart
 	if err := c.BodyParser(&body); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid request body",

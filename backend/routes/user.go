@@ -12,6 +12,15 @@ import (
 	"time"
 )
 
+// RegisterHandler godoc
+// @Summary Register a new user
+// @Description Create a new user account and return JWT token
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body models.FormRequest true "User registration data"
+// @Success 201 {object} models.UserResponse
+// @Router /register [post]
 func RegisterHandler(c *fiber.Ctx) error {
 	var req models.FormRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -72,19 +81,26 @@ func RegisterHandler(c *fiber.Ctx) error {
 	})
 
 	// Return response
-	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
-		"message": "Register successful",
-		"user": fiber.Map{
-			"userid":   user.ID,
-			"role":     user.Role,
-			"username": user.Username,
-			"exp":      EXP.Unix(),
-		},
-	})
+	resp := models.UserResponse{
+		Message: "Register successful",
+	}
+	resp.User.UserID = user.ID
+	resp.User.Role = user.Role
+	resp.User.Username = user.Username
+	resp.User.Exp = EXP.Unix()
+
+	return c.Status(fiber.StatusCreated).JSON(resp)
 }
 
-
-
+// LoginHandler godoc
+// @Summary Login user
+// @Description Authenticate user and return JWT token
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body models.FormRequest true "User login data"
+// @Success 200 {object} models.UserResponse
+// @Router /login [post]
 func LoginHandler(c *fiber.Ctx) error {
 	var req models.FormRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -128,17 +144,28 @@ func LoginHandler(c *fiber.Ctx) error {
 		SameSite: "None",
 	})
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"message": "Login successful",
-		"user": fiber.Map{
-			"userid":   user.ID,
-			"role":     user.Role,
-			"username": user.Username,
-			"exp":      EXP.Unix(),
-		},
-	})
+	resp := models.UserResponse{
+		Message: "Login successful",
+	}
+	resp.User.UserID = user.ID
+	resp.User.Role = user.Role
+	resp.User.Username = user.Username
+	resp.User.Exp = EXP.Unix()
+
+	return c.Status(fiber.StatusOK).JSON(resp)
 }
 
+// UpdateSetting godoc
+// @Summary Update user settings
+// @Description Update phone number or place for authenticated user
+// @Tags user
+// @Accept json
+// @Produce json
+// @Param request body models.FormSetting true "Update settings"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
+// @Router /settings [put]
+// @Security BearerAuth
 func UpdateSetting(c *fiber.Ctx) error {
 	userID := c.Locals("userid").(string)
 
@@ -203,6 +230,15 @@ func UpdateSetting(c *fiber.Ctx) error {
 	})
 }
 
+// @title Bakery POS API
+// @version 1.0
+// @description This is a Bakery POS API documentation
+// @host localhost:3000
+// @BasePath /api
+// @schemes http
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 func isDigitsOnly(s string) bool {
 	for _, r := range s {
 		if r < '0' || r > '9' {

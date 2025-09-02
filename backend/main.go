@@ -9,8 +9,18 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+
+	
+	_ "Bakery_Pos/docs"
+  "github.com/gofiber/swagger"
 )
 
+// @title Bakery POS API
+// @version 1.0
+// @description This is a Bakery POS API documentation
+// @host localhost:3000
+// @BasePath /api
+// @schemes http
 func main() {
 	err := godotenv.Load()
 	if err != nil {
@@ -54,6 +64,6 @@ func main() {
 	// productAdmin.Delete("/:id", routes.DeleteProduct)
 
 
-
+  app.Get("/*", swagger.HandlerDefault)
 	app.Listen(":3000")
 }

@@ -1,0 +1,117 @@
+basePath: /api
+definitions:
+  models.FormRequest:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  models.FormSetting:
+    properties:
+      phone_number:
+        type: string
+      place:
+        type: string
+    type: object
+  models.UserResponse:
+    properties:
+      message:
+        type: string
+      user:
+        properties:
+          exp:
+            type: integer
+          role:
+            type: string
+          userid:
+            type: string
+          username:
+            type: string
+        type: object
+    type: object
+host: localhost:3000
+info:
+  contact: {}
+  description: This is a Bakery POS API documentation
+  title: Bakery POS API
+  version: "1.0"
+paths:
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user and return JWT token
+      parameters:
+      - description: User login data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.FormRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UserResponse'
+      summary: Login user
+      tags:
+      - auth
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user account and return JWT token
+      parameters:
+      - description: User registration data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.FormRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.UserResponse'
+      summary: Register a new user
+      tags:
+      - auth
+  /settings:
+    put:
+      consumes:
+      - application/json
+      description: Update phone number or place for authenticated user
+      parameters:
+      - description: Update settings
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.FormSetting'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update user settings
+      tags:
+      - user
+schemes:
+- http
+swagger: "2.0"
