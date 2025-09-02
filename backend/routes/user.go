@@ -15,12 +15,12 @@ import (
 // RegisterHandler godoc
 // @Summary Register a new user
 // @Description Create a new user account and return JWT token
-// @Tags auth
+// @Tags user
 // @Accept json
 // @Produce json
 // @Param request body models.FormRequest true "User registration data"
 // @Success 201 {object} models.UserResponse
-// @Router /register [post]
+// @Router /user/register [post]
 func RegisterHandler(c *fiber.Ctx) error {
 	var req models.FormRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -95,12 +95,12 @@ func RegisterHandler(c *fiber.Ctx) error {
 // LoginHandler godoc
 // @Summary Login user
 // @Description Authenticate user and return JWT token
-// @Tags auth
+// @Tags user
 // @Accept json
 // @Produce json
 // @Param request body models.FormRequest true "User login data"
 // @Success 200 {object} models.UserResponse
-// @Router /login [post]
+// @Router /user/login [post]
 func LoginHandler(c *fiber.Ctx) error {
 	var req models.FormRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -162,9 +162,8 @@ func LoginHandler(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param request body models.FormSetting true "Update settings"
-// @Success 200 {object} map[string]interface{}
-// @Failure 400 {object} map[string]string
-// @Router /settings [put]
+// @Success 200 {object} models.MessageResponse
+// @Router /user/settings [put]
 // @Security BearerAuth
 func UpdateSetting(c *fiber.Ctx) error {
 	userID := c.Locals("userid").(string)
@@ -224,21 +223,13 @@ func UpdateSetting(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"message": "User updated successfully",
-		"user":    user,
-	})
+	
+	res := models.MessageResponse{
+		Message: "User updated successfully",
+	}
+	return c.Status(fiber.StatusOK).JSON(res)
 }
 
-// @title Bakery POS API
-// @version 1.0
-// @description This is a Bakery POS API documentation
-// @host localhost:3000
-// @BasePath /api
-// @schemes http
-// @securityDefinitions.apikey BearerAuth
-// @in header
-// @name Authorization
 func isDigitsOnly(s string) bool {
 	for _, r := range s {
 		if r < '0' || r > '9' {

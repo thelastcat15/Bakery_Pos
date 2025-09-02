@@ -15,7 +15,112 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/login": {
+        "/cart": {
+            "get": {
+                "description": "Retrieve the current user's cart items",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Cart"
+                ],
+                "summary": "Get user's cart",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.CartItemResponse"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Remove all items in user's cart",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Cart"
+                ],
+                "summary": "Delete user's cart",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.MessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/cart/checkout": {
+            "post": {
+                "description": "Convert user's cart to an order",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Cart"
+                ],
+                "summary": "Checkout cart",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.CheckoutResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/cart/{product_id}": {
+            "put": {
+                "description": "Increase or decrease quantity of a product in the user's cart",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Cart"
+                ],
+                "summary": "Update product quantity in cart",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Product ID",
+                        "name": "product_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Quantity change",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.FormEditCart"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.CartItemResponse"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/user/login": {
             "post": {
                 "description": "Authenticate user and return JWT token",
                 "consumes": [
@@ -25,7 +130,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "auth"
+                    "user"
                 ],
                 "summary": "Login user",
                 "parameters": [
@@ -49,7 +154,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/register": {
+        "/user/register": {
             "post": {
                 "description": "Create a new user account and return JWT token",
                 "consumes": [
@@ -59,7 +164,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "auth"
+                    "user"
                 ],
                 "summary": "Register a new user",
                 "parameters": [
@@ -83,7 +188,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/settings": {
+        "/user/settings": {
             "put": {
                 "security": [
                     {
@@ -116,17 +221,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/models.MessageResponse"
                         }
                     }
                 }
@@ -134,6 +229,51 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "models.CartItemResponse": {
+            "type": "object",
+            "properties": {
+                "price": {
+                    "type": "number"
+                },
+                "product_id": {
+                    "type": "integer"
+                },
+                "product_name": {
+                    "type": "string"
+                },
+                "quantity": {
+                    "type": "integer"
+                },
+                "sale_price": {
+                    "type": "number"
+                }
+            }
+        },
+        "models.CheckoutResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "order_id": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "total": {
+                    "type": "number"
+                }
+            }
+        },
+        "models.FormEditCart": {
+            "type": "object",
+            "properties": {
+                "quantity": {
+                    "type": "integer"
+                }
+            }
+        },
         "models.FormRequest": {
             "type": "object",
             "properties": {
@@ -152,6 +292,14 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "place": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.MessageResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
                     "type": "string"
                 }
             }

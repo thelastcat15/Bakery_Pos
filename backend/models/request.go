@@ -11,5 +11,5 @@ type FormSetting struct {
 }
 
 type FormEditCart struct {
-	QuantityChange int `json:"quantity_change"`
+	Quantity int `json:"quantity"`
 }
