@@ -1,5 +1,34 @@
 basePath: /api
 definitions:
+  models.CartItemResponse:
+    properties:
+      price:
+        type: number
+      product_id:
+        type: integer
+      product_name:
+        type: string
+      quantity:
+        type: integer
+      sale_price:
+        type: number
+    type: object
+  models.CheckoutResponse:
+    properties:
+      message:
+        type: string
+      order_id:
+        type: integer
+      status:
+        type: string
+      total:
+        type: number
+    type: object
+  models.FormEditCart:
+    properties:
+      quantity:
+        type: integer
+    type: object
   models.FormRequest:
     properties:
       password:
@@ -12,6 +41,11 @@ definitions:
       phone_number:
         type: string
       place:
+        type: string
+    type: object
+  models.MessageResponse:
+    properties:
+      message:
         type: string
     type: object
   models.UserResponse:
@@ -37,7 +71,76 @@ info:
   title: Bakery POS API
   version: "1.0"
 paths:
-  /login:
+  /cart:
+    delete:
+      description: Remove all items in user's cart
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.MessageResponse'
+      summary: Delete user's cart
+      tags:
+      - Cart
+    get:
+      description: Retrieve the current user's cart items
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.CartItemResponse'
+            type: array
+      summary: Get user's cart
+      tags:
+      - Cart
+  /cart/{product_id}:
+    put:
+      consumes:
+      - application/json
+      description: Increase or decrease quantity of a product in the user's cart
+      parameters:
+      - description: Product ID
+        in: path
+        name: product_id
+        required: true
+        type: integer
+      - description: Quantity change
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.FormEditCart'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.CartItemResponse'
+            type: array
+      summary: Update product quantity in cart
+      tags:
+      - Cart
+  /cart/checkout:
+    post:
+      description: Convert user's cart to an order
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.CheckoutResponse'
+      summary: Checkout cart
+      tags:
+      - Cart
+  /user/login:
     post:
       consumes:
       - application/json
@@ -58,8 +161,8 @@ paths:
             $ref: '#/definitions/models.UserResponse'
       summary: Login user
       tags:
-      - auth
-  /register:
+      - user
+  /user/register:
     post:
       consumes:
       - application/json
@@ -80,8 +183,8 @@ paths:
             $ref: '#/definitions/models.UserResponse'
       summary: Register a new user
       tags:
-      - auth
-  /settings:
+      - user
+  /user/settings:
     put:
       consumes:
       - application/json
@@ -99,14 +202,7 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/models.MessageResponse'
       security:
       - BearerAuth: []
       summary: Update user settings

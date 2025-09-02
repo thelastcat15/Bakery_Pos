@@ -47,7 +47,7 @@ func main() {
 
 	cart := api.Group("/cart", middleware.Auth)
 	cart.Get("/", routes.GetCart)
-	// cart.Delete("/", routes.DeleteCart)
+	cart.Delete("/", routes.DeleteCart)
 	cart.Put("/:product_id", routes.UpdateProductCart)
 	cart.Post("/checkout", routes.Checkout)
 

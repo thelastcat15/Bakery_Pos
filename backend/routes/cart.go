@@ -8,6 +8,13 @@ import (
 	"Bakery_Pos/db"
 )
 
+// GetCart godoc
+// @Summary Get user's cart
+// @Description Retrieve the current user's cart items
+// @Tags Cart
+// @Produce json
+// @Success 200 {object} []models.CartItemResponse
+// @Router /cart [get]
 func GetCart(c *fiber.Ctx) error {
 	userID := c.Locals("userid").(string)
 
@@ -30,28 +37,57 @@ func GetCart(c *fiber.Ctx) error {
 		}
 	}
 
-	var items []fiber.Map
+	var items []models.CartItemResponse
 	for _, item := range cart.Items {
-		itemMap := fiber.Map{
-			"product_id":   item.ProductID,
-			"product_name": item.Product.Name,
-			"quantity":     item.Quantity,
-			"price":        item.Product.Price,
+		itemResp := models.CartItemResponse{
+			ProductID:   item.ProductID,
+			ProductName: item.Product.Name,
+			Quantity:    item.Quantity,
+			Price:       item.Product.Price,
 		}
 
 		if item.Product.IsOnSale && item.Product.SalePrice != nil {
-			itemMap["sale_price"] = *item.Product.SalePrice
+			itemResp.SalePrice = item.Product.SalePrice
 		}
 
-		items = append(items, itemMap)
+		items = append(items, itemResp)
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"user_id": cart.UserID,
-		"items":   items,
-	})
+	return c.Status(fiber.StatusOK).JSON(items)
 }
 
+// DeleteCart godoc
+// @Summary Delete user's cart
+// @Description Remove all items in user's cart
+// @Tags Cart
+// @Produce json
+// @Success 200 {object} models.MessageResponse
+// @Router /cart [delete]
+func DeleteCart(c *fiber.Ctx) error {
+	userID := c.Locals("userid").(string)
+
+	if err := db.DB.Where("user_id = ?", userID).Delete(&models.Cart{}).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to delete cart",
+		})
+	}
+
+	res := models.MessageResponse{
+		Message: "Cart deleted successfully",
+	}
+	return c.Status(fiber.StatusOK).JSON(res)
+}
+
+// UpdateProductCart godoc
+// @Summary Update product quantity in cart
+// @Description Increase or decrease quantity of a product in the user's cart
+// @Tags Cart
+// @Accept json
+// @Produce json
+// @Param product_id path int true "Product ID"
+// @Param request body models.FormEditCart true "Quantity change"
+// @Success 200 {object} []models.CartItemResponse
+// @Router /cart/{product_id} [put]
 func UpdateProductCart(c *fiber.Ctx) error {
 	userID := c.Locals("userid").(string)
 
@@ -67,12 +103,6 @@ func UpdateProductCart(c *fiber.Ctx) error {
 	if err := c.BodyParser(&body); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid request body",
-		})
-	}
-
-	if body.QuantityChange == 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Quantity change is required",
 		})
 	}
 
@@ -92,26 +122,25 @@ func UpdateProductCart(c *fiber.Ctx) error {
 	err = db.DB.Where("cart_id = ? AND product_id = ?", cart.ID, productIDUint).First(&cartItem).Error
 
 	if err == gorm.ErrRecordNotFound {
-		if body.QuantityChange > 0 {
+		if body.Quantity > 0 {
 			newItem := models.CartItem{
 				CartID:    cart.ID,
 				ProductID: uint(productIDUint),
-				Quantity:  body.QuantityChange,
+				Quantity:  body.Quantity,
 			}
 			if err := db.DB.Create(&newItem).Error; err != nil {
 				return c.Status(500).JSON(fiber.Map{"error": "Failed to add product"})
 			}
 		} else {
-			return c.Status(400).JSON(fiber.Map{"error": "Cannot reduce quantity of a non-existing item"})
+			return c.Status(400).JSON(fiber.Map{"error": "Item does not exist"})
 		}
 	} else if err == nil {
-		newQuantity := cartItem.Quantity + body.QuantityChange
-		if newQuantity <= 0 {
+		if body.Quantity <= 0 {
 			if err := db.DB.Delete(&cartItem).Error; err != nil {
 				return c.Status(500).JSON(fiber.Map{"error": "Failed to remove item"})
 			}
 		} else {
-			cartItem.Quantity = newQuantity
+			cartItem.Quantity = body.Quantity
 			if err := db.DB.Save(&cartItem).Error; err != nil {
 				return c.Status(500).JSON(fiber.Map{"error": "Failed to update quantity"})
 			}
@@ -120,33 +149,37 @@ func UpdateProductCart(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "Database error"})
 	}
 
+
 	if err := db.DB.Preload("Items.Product").First(&cart, cart.ID).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Failed to load updated cart"})
 	}
 
-	var items []fiber.Map
+	var items []models.CartItemResponse
 	for _, item := range cart.Items {
-		itemMap := fiber.Map{
-			"product_id":   item.ProductID,
-			"product_name": item.Product.Name,
-			"quantity":     item.Quantity,
-			"price":        item.Product.Price,
+		itemResp := models.CartItemResponse{
+			ProductID:   item.ProductID,
+			ProductName: item.Product.Name,
+			Quantity:    item.Quantity,
+			Price:       item.Product.Price,
 		}
 
 		if item.Product.IsOnSale && item.Product.SalePrice != nil {
-			itemMap["sale_price"] = *item.Product.SalePrice
+			itemResp.SalePrice = item.Product.SalePrice
 		}
 
-		items = append(items, itemMap)
+		items = append(items, itemResp)
 	}
 
-	return c.Status(200).JSON(fiber.Map{
-		"user_id": cart.UserID,
-		"items":   items,
-	})
+	return c.Status(fiber.StatusOK).JSON(items)
 }
 
-
+// Checkout godoc
+// @Summary Checkout cart
+// @Description Convert user's cart to an order
+// @Tags Cart
+// @Produce json
+// @Success 200 {object} models.CheckoutResponse
+// @Router /cart/checkout [post]
 func Checkout(c *fiber.Ctx) error {
 	userID := c.Locals("userid").(string)
 
@@ -210,10 +243,12 @@ func Checkout(c *fiber.Ctx) error {
 
 	tx.Commit()
 
-	return c.Status(200).JSON(fiber.Map{
-		"message":    "Checkout successful",
-		"order_id":   order.ID,
-		"total":      total,
-		"status":     order.Status,
-	})
+	res := models.CheckoutResponse{
+		Message: "Checkout successful",
+		OrderID: order.ID,
+		Total:   total,
+		Status:  order.Status,
+	}
+
+	return c.Status(200).JSON(res)
 }
