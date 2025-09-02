@@ -1,5 +1,6 @@
 "use client"
 import AdminOverview from "@/components/features/admin/AdminOverview"
+import ProductManagement from "@/components/features/admin/ProductManagement"
 import {
   OrdersIcon,
   OverviewIcon,
@@ -149,6 +150,7 @@ const AdminDashBoard = () => {
       {/* Main content */}
       <main className="flex-1 p-6">
         {activeMenu === "overview" && <AdminOverview />}
+        {activeMenu === "products" && <ProductManagement />}
       </main>
     </div>
   )
