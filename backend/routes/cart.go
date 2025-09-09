@@ -6,6 +6,8 @@ import (
 	"gorm.io/gorm"
 	"Bakery_Pos/models"
 	"Bakery_Pos/db"
+
+	"github.com/google/uuid"
 )
 
 // GetCart godoc
@@ -16,11 +18,16 @@ import (
 // @Success 200 {object} []models.CartItemResponse
 // @Router /cart [get]
 func GetCart(c *fiber.Ctx) error {
-	userID := c.Locals("userid").(string)
+	userIDStr := c.Locals("userid").(string)
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid user ID",
+    })
+	}
 
 	var cart models.Cart
-	err := db.DB.Preload("Items.Product").Where("user_id = ?", userID).First(&cart).Error
-	if err != nil {
+	if err := db.DB.Preload("Items.Product.Promotions").Where("user_id = ?", userID).First(&cart).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			cart = models.Cart{
 				UserID: userID,
@@ -44,10 +51,7 @@ func GetCart(c *fiber.Ctx) error {
 			ProductName: item.Product.Name,
 			Quantity:    item.Quantity,
 			Price:       item.Product.Price,
-		}
-
-		if item.Product.IsOnSale && item.Product.SalePrice != nil {
-			itemResp.SalePrice = item.Product.SalePrice
+			SalePrice:   item.Product.FinalPrice(),
 		}
 
 		items = append(items, itemResp)
@@ -55,6 +59,7 @@ func GetCart(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusOK).JSON(items)
 }
+
 
 // DeleteCart godoc
 // @Summary Delete user's cart
@@ -64,7 +69,13 @@ func GetCart(c *fiber.Ctx) error {
 // @Success 200 {object} models.MessageResponse
 // @Router /cart [delete]
 func DeleteCart(c *fiber.Ctx) error {
-	userID := c.Locals("userid").(string)
+	userIDStr := c.Locals("userid").(string)
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid user ID",
+    })
+	}
 
 	if err := db.DB.Where("user_id = ?", userID).Delete(&models.Cart{}).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -89,7 +100,13 @@ func DeleteCart(c *fiber.Ctx) error {
 // @Success 200 {object} []models.CartItemResponse
 // @Router /cart/{product_id} [put]
 func UpdateProductCart(c *fiber.Ctx) error {
-	userID := c.Locals("userid").(string)
+	userIDStr := c.Locals("userid").(string)
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid user ID",
+    })
+	}
 
 	productIDParam := c.Params("product_id")
 	productIDUint, err := strconv.ParseUint(productIDParam, 10, 64)
@@ -107,7 +124,7 @@ func UpdateProductCart(c *fiber.Ctx) error {
 	}
 
 	var cart models.Cart
-	if err := db.DB.Preload("Items.Product").Where("user_id = ?", userID).First(&cart).Error; err != nil {
+	if err := db.DB.Preload("Items.Product.Promotions").Where("user_id = ?", userID).First(&cart).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			cart = models.Cart{UserID: userID}
 			if err := db.DB.Create(&cart).Error; err != nil {
@@ -149,8 +166,7 @@ func UpdateProductCart(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "Database error"})
 	}
 
-
-	if err := db.DB.Preload("Items.Product").First(&cart, cart.ID).Error; err != nil {
+	if err := db.DB.Preload("Items.Product.Promotions").First(&cart, cart.ID).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Failed to load updated cart"})
 	}
 
@@ -161,17 +177,14 @@ func UpdateProductCart(c *fiber.Ctx) error {
 			ProductName: item.Product.Name,
 			Quantity:    item.Quantity,
 			Price:       item.Product.Price,
+			SalePrice:   item.Product.FinalPrice(),
 		}
-
-		if item.Product.IsOnSale && item.Product.SalePrice != nil {
-			itemResp.SalePrice = item.Product.SalePrice
-		}
-
 		items = append(items, itemResp)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(items)
 }
+
 
 // Checkout godoc
 // @Summary Checkout cart
@@ -181,10 +194,16 @@ func UpdateProductCart(c *fiber.Ctx) error {
 // @Success 200 {object} models.CheckoutResponse
 // @Router /cart/checkout [post]
 func Checkout(c *fiber.Ctx) error {
-	userID := c.Locals("userid").(string)
+	userIDStr := c.Locals("userid").(string)
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid user ID",
+    })
+	}
 
 	var cart models.Cart
-	if err := db.DB.Preload("Items.Product").Where("user_id = ?", userID).First(&cart).Error; err != nil {
+	if err := db.DB.Preload("Items.Product.Promotions").Where("user_id = ?", userID).First(&cart).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"error": "Cart not found",
 		})
@@ -198,10 +217,7 @@ func Checkout(c *fiber.Ctx) error {
 
 	var total float64
 	for _, item := range cart.Items {
-		price := item.Product.Price
-		if item.Product.IsOnSale && item.Product.SalePrice != nil {
-			price = *item.Product.SalePrice
-		}
+		price := item.Product.FinalPrice()
 		total += float64(item.Quantity) * price
 	}
 
@@ -218,10 +234,7 @@ func Checkout(c *fiber.Ctx) error {
 	}
 
 	for _, item := range cart.Items {
-		price := item.Product.Price
-		if item.Product.IsOnSale && item.Product.SalePrice != nil {
-			price = *item.Product.SalePrice
-		}
+		price := item.Product.FinalPrice()
 
 		orderItem := models.OrderItem{
 			OrderID:   order.ID,
@@ -252,3 +265,4 @@ func Checkout(c *fiber.Ctx) error {
 
 	return c.Status(200).JSON(res)
 }
+

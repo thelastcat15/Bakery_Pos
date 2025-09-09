@@ -10,6 +10,8 @@ import (
 	"gorm.io/gorm"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // RegisterHandler godoc
@@ -166,7 +168,13 @@ func LoginHandler(c *fiber.Ctx) error {
 // @Router /user/settings [put]
 // @Security BearerAuth
 func UpdateSetting(c *fiber.Ctx) error {
-	userID := c.Locals("userid").(string)
+	userIDStr := c.Locals("userid").(string)
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid user ID",
+    })
+	}
 
 	var input models.FormSetting
 	if err := c.BodyParser(&input); err != nil {

@@ -14,12 +14,32 @@ type UserResponse struct {
 	} `json:"user"`
 }
 
+type ProductResponse struct {
+  Name        string       				`json:"name"`
+  Description string       				`json:"description"`
+  Tag         string       				`json:"tag"`
+  Price       float64      				`json:"price"`
+  Stock       int          				`json:"stock"`
+  IsActive    bool         				`json:"is_active"`
+  Images      []ImageResponse     `json:"images,omitempty"`
+}
+
+type UploadImagesResponse struct {
+  Images []ImageResponse `json:"images"`
+}
+
+type ImageResponse struct {
+  FileName  string `json:"file_name"`
+  UploadURL string `json:"upload_url"`
+  Order     int    `json:"order"`
+}
+
 type CartItemResponse struct {
-	ProductID   uint     `json:"product_id"`
-	ProductName string   `json:"product_name"`
-	Quantity    int      `json:"quantity"`
-	Price       float64  `json:"price"`
-	SalePrice   *float64 `json:"sale_price,omitempty"`
+	ProductID   uint    `json:"product_id"`
+	ProductName string  `json:"product_name"`
+	Quantity    int     `json:"quantity"`
+	Price       float64 `json:"price"`
+	SalePrice   float64 `json:"sale_price"`
 }
 
 type CheckoutResponse struct {

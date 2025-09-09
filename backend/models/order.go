@@ -1,21 +1,27 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"github.com/google/uuid"
+	"gorm.io/gorm"
+)
 
 type Order struct {
 	gorm.Model
-	UserID 		string 			`gorm:"not null;index"`
-	OrderID 	uint 			`gorm:"not null;index"`
+	UserID 		uuid.UUID 	`gorm:"not null;index"`
+	OrderID 	uint 				`gorm:"not null;index"`
 	Total  		float64
 	Status 		string
 	Items  		[]OrderItem
 }
 
 type OrderItem struct {
-	gorm.Model
-	OrderID   uint    `gorm:"not null"`
-	ProductID uint    `gorm:"not null"`
-	Quantity  int     `gorm:"not null"`
-	Price     float64
-	Product   Product `gorm:"foreignKey:ProductID"`
+	OrderID   uint		  `gorm:"not null;index:idx_order_product,unique"`
+	ProductID uint      `gorm:"not null;index:idx_order_product,unique"`
+	Quantity  int       `gorm:"not null"`
+
+	Name        string 
+	Description string 
+	Tag         string
+	Price       float64
+	ImageURL    string
 }
