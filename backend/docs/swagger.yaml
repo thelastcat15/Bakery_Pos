@@ -1,5 +1,20 @@
 basePath: /api
 definitions:
+  models.BodyProductRequest:
+    properties:
+      description:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+      price:
+        type: number
+      stock:
+        type: integer
+      tag:
+        type: string
+    type: object
   models.CartItemResponse:
     properties:
       price:
@@ -43,10 +58,57 @@ definitions:
       place:
         type: string
     type: object
+  models.ImageRequest:
+    properties:
+      order:
+        type: integer
+    type: object
+  models.ImageResponse:
+    properties:
+      file_name:
+        type: string
+      order:
+        type: integer
+      upload_url:
+        type: string
+    type: object
   models.MessageResponse:
     properties:
       message:
         type: string
+    type: object
+  models.ProductResponse:
+    properties:
+      description:
+        type: string
+      images:
+        items:
+          $ref: '#/definitions/models.ImageResponse'
+        type: array
+      is_active:
+        type: boolean
+      name:
+        type: string
+      price:
+        type: number
+      stock:
+        type: integer
+      tag:
+        type: string
+    type: object
+  models.UploadImagesRequest:
+    properties:
+      images:
+        items:
+          $ref: '#/definitions/models.ImageRequest'
+        type: array
+    type: object
+  models.UploadImagesResponse:
+    properties:
+      images:
+        items:
+          $ref: '#/definitions/models.ImageResponse'
+        type: array
     type: object
   models.UserResponse:
     properties:
@@ -140,6 +202,99 @@ paths:
       summary: Checkout cart
       tags:
       - Cart
+  /products:
+    post:
+      consumes:
+      - application/json
+      description: Add a new product to the database
+      parameters:
+      - description: Product data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.BodyProductRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.ProductResponse'
+      summary: Create a new product
+      tags:
+      - product
+  /products/{id}:
+    delete:
+      description: Remove a product from the database by ID
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+      summary: Delete a product
+      tags:
+      - product
+    put:
+      consumes:
+      - application/json
+      description: Update an existing product by ID
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated product data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.BodyProductRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ProductResponse'
+      summary: Update a product
+      tags:
+      - product
+  /products/{id}/images:
+    post:
+      consumes:
+      - application/json
+      description: Generate signed URLs for uploading multiple images and store them
+        in the database
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Images data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.UploadImagesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.UploadImagesResponse'
+            type: array
+      summary: Upload multiple images for a product
+      tags:
+      - product
   /user/login:
     post:
       consumes:

@@ -30,6 +30,12 @@ func Connect_DB() {
 
 	if err := DB.AutoMigrate(
 		&models.User{},
+		&models.Cart{},
+		&models.CartItem{},
+		&models.Product{},
+		&models.Promotion{},
+		&models.Order{},
+		&models.OrderItem{},
 	); err != nil {
 		log.Fatalf("AutoMigrate failed: %v", err)
 	}
