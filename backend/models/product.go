@@ -21,7 +21,8 @@ type Image struct {
   ID        uint
   ProductID uint
   FileName  string
-  ImageURL  *string
+	PublicURL *string
+  UploadURL *string
   Order     int
 }
 

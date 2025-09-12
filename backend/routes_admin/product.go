@@ -42,18 +42,7 @@ func CreateProduct(c *fiber.Ctx) error {
     })
   }
 
-  // Build response
-  resp := models.ProductResponse{
-    Name:        product.Name,
-    Description: product.Description,
-    Tag:         product.Tag,
-    Price:       product.Price,
-    Stock:       product.Stock,
-    IsActive:    product.IsActive,
-    Images:      []models.ImageResponse{},
-  }
-
-  return c.Status(fiber.StatusCreated).JSON(resp)
+  return c.Status(fiber.StatusCreated).JSON(product.ToResponse())
 }
 
 // UpdateProduct godoc
@@ -96,29 +85,7 @@ func UpdateProduct(c *fiber.Ctx) error {
     })
   }
 
-  resp := models.ProductResponse{
-    Name:        product.Name,
-    Description: product.Description,
-    Tag:         product.Tag,
-    Price:       product.Price,
-    Stock:       product.Stock,
-    IsActive:    product.IsActive,
-    Images:      []models.ImageResponse{},
-  }
-
-  for _, img := range product.Images {
-    uploadURL := ""
-    if img.ImageURL != nil {
-      uploadURL = *img.ImageURL
-    }
-    resp.Images = append(resp.Images, models.ImageResponse{
-      FileName:  img.FileName,
-      UploadURL: uploadURL,
-      Order:     img.Order,
-    })
-  }
-
-  return c.JSON(resp)
+  return c.JSON(product.ToResponse())
 }
 
 // DeleteProduct godoc
