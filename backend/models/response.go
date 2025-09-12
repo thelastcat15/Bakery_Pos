@@ -15,7 +15,7 @@ type UserResponse struct {
 }
 
 type ProductResponse struct {
-	ID 				  *uint         				`json:"id"`
+	ID 				  uint         			`json:"id"`
   Name        string       				`json:"name"`
   Description string       				`json:"description"`
   Tag         string       				`json:"tag"`
@@ -30,6 +30,7 @@ type UploadImagesResponse struct {
 }
 
 type ImageResponse struct {
+  ID        uint	 `json:"id"`
   FileName  string `json:"file_name"`
 	PublicURL *string `json:"public_url,omitempty"`
   UploadURL *string `json:"upload_url,omitempty"`
@@ -37,11 +38,6 @@ type ImageResponse struct {
 }
 
 type CartItemResponse struct {
-	ProductID   uint    `json:"product_id"`
-	ProductName string  `json:"product_name"`
-	Quantity    int     `json:"quantity"`
-	Price       float64 `json:"price"`
-	SalePrice   float64 `json:"sale_price"`
 	ProductID   uint    `json:"product_id"`
 	ProductName string  `json:"product_name"`
 	Quantity    int     `json:"quantity"`

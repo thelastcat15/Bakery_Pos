@@ -3,8 +3,6 @@ package routes_admin
 import (
 	"fmt"
 	"strconv"
-	"fmt"
-	"strconv"
 	"Bakery_Pos/db"
 	"Bakery_Pos/models"
 
@@ -53,7 +51,7 @@ func CreateProduct(c *fiber.Ctx) error {
     })
   }
 
-  return c.Status(fiber.StatusCreated).JSON(product.ToResponse())
+  return c.Status(fiber.StatusOK).Status(fiber.StatusCreated).JSON(product.ToResponse(true))
 }
 
 // UpdateProduct godoc
@@ -96,7 +94,7 @@ func UpdateProduct(c *fiber.Ctx) error {
     })
   }
 
-  return c.JSON(product.ToResponse())
+  return c.Status(fiber.StatusOK).JSON(product.ToResponse(true))
 }
 
 // DeleteProduct godoc
@@ -127,62 +125,60 @@ func DeleteProduct(c *fiber.Ctx) error {
 // @Success 200 {array} models.UploadImagesResponse
 // @Router /products/{id}/images [post]
 func UploadImagesProduct(c *fiber.Ctx) error {
-  idStr := c.Params("id")
-  productID, err := strconv.Atoi(idStr)
-  if err != nil {
-    return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid product ID"})
-  }
+	idStr := c.Params("id")
+	productID, err := strconv.Atoi(idStr)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid product ID"})
+	}
 
-  var body models.UploadImagesRequest
-  if err := c.BodyParser(&body); err != nil {
-    return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request payload"})
-  }
+	var body models.UploadImagesRequest
+	if err := c.BodyParser(&body); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request payload"})
+	}
 
-  var product models.Product
-  if err := db.DB.First(&product, productID).Error; err != nil {
-    return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Product not found"})
-  }
+	var product models.Product
+	if err := db.DB.First(&product, productID).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Product not found"})
+	}
 
-  var results []models.ImageResponse
+	var results []models.ImageResponse
 
-  for i, imgReq := range body.Images {
-    order := imgReq.Order
-    if order < 1 {
-      order = i + 1
-    }
+	for i, imgReq := range body.Images {
+		order := imgReq.Order
+		if order < 1 {
+			order = i + 1
+		}
 
-    fileName := fmt.Sprintf("%d-%d.png", product.ID, order)
-    filePath := fmt.Sprintf("products/%d/%s", product.ID, fileName)
+		fileName := fmt.Sprintf("%d-%d.png", product.ID, order)
+		filePath := fmt.Sprintf("products/%d/%s", product.ID, fileName)
 
-    signedUpload, err := db.Storage.CreateSignedUploadUrl("product-images", filePath)
-    if err != nil {
-      return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
-    }
+		signedUpload, err := db.Storage.CreateSignedUploadUrl("product-images", filePath)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+		}
 
-    var image models.Image
-    err = db.DB.Where("product_id = ? AND `order` = ?", product.ID, order).First(&image).Error
-    if err == nil {
-      image.FileName = fileName
-      image.ImageURL = &filePath
-      db.DB.Save(&image)
-    } else {
-      image = models.Image{
-        ProductID: product.ID,
-        FileName:  fileName,
-        ImageURL:  &filePath,
-        Order:     order,
-      }
-      db.DB.Create(&image)
-    }
+		var image models.Image
+		err = db.DB.Where("product_id = ? AND `order` = ?", product.ID, order).First(&image).Error
+		if err == nil {
+			image.FileName = fileName
+			image.FilePath = filePath
+			image.UploadURL = &signedUpload.Url
+			db.DB.Save(&image)
+		} else {
+			image = models.Image{
+				ProductID: product.ID,
+				FileName:  fileName,
+				FilePath:  filePath,
+				UploadURL: &signedUpload.Url,
+				Order:     order,
+			}
+			db.DB.Create(&image)
+		}
 
-    results = append(results, models.ImageResponse{
-      FileName:  fileName,
-      UploadURL: signedUpload.Url,
-      Order:     order,
-    })
-  }
+		results = append(results, image.ToResponse(true))
+	}
 
-  return c.Status(fiber.StatusOK).JSON(models.UploadImagesResponse{
-    Images: results,
-  })
+	return c.Status(fiber.StatusOK).JSON(models.UploadImagesResponse{
+		Images: results,
+	})
 }

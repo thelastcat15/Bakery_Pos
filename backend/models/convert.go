@@ -1,19 +1,27 @@
 package models
 
+func (img *Image) ToResponse(isAdmin bool) ImageResponse {
+	resp := ImageResponse{
+		ID:        img.ID,
+		FileName:  img.FileName,
+		Order:     img.Order,
+		PublicURL: img.PublicURL,
+	}
 
-func (p *Product) ToResponse() ProductResponse {
+	if isAdmin {
+		resp.UploadURL = img.UploadURL
+	}
+	return resp
+}
+
+func (p *Product) ToResponse(isAdmin bool) ProductResponse {
 	images := make([]ImageResponse, len(p.Images))
 	for i, img := range p.Images {
-		images[i] = ImageResponse{
-			FileName:  img.FileName,
-			PublicURL: img.PublicURL,
-			UploadURL: img.UploadURL,
-			Order:     img.Order,
-		}
+		images[i] = img.ToResponse(isAdmin)
 	}
 
 	return ProductResponse{
-		ID:          &p.ID,
+		ID:          p.ID,
 		Name:        p.Name,
 		Description: p.Description,
 		Tag:         p.Tag,
@@ -22,12 +30,4 @@ func (p *Product) ToResponse() ProductResponse {
 		IsActive:    p.IsActive,
 		Images:      images,
 	}
-}
-
-func ToProductResponseList(products []Product) []ProductResponse {
-	responses := make([]ProductResponse, len(products))
-	for i := range products {
-		responses[i] = products[i].ToResponse()
-	}
-	return responses
 }

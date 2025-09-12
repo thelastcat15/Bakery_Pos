@@ -15,7 +15,13 @@ func GetProducts(c *fiber.Ctx) error {
 			"error": "Failed to fetch products",
 		})
 	}
-	return c.JSON(models.ToProductResponseList(products))
+
+	responses := make([]ProductResponse, len(products))
+	for i := range products {
+		responses[i] = products[i].ToResponse(false)
+	}
+
+	return c.Status(fiber.StatusOK).JSON(responses)
 }
 
 func GetProductByID(c *fiber.Ctx) error {
@@ -26,5 +32,5 @@ func GetProductByID(c *fiber.Ctx) error {
 			"error": "Product not found",
 		})
 	}
-	return c.JSON(product.ToResponse())
+	return c.Status(fiber.StatusOK).JSON(product.ToResponse(false))
 }
