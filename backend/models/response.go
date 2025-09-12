@@ -42,6 +42,11 @@ type CartItemResponse struct {
 	Quantity    int     `json:"quantity"`
 	Price       float64 `json:"price"`
 	SalePrice   float64 `json:"sale_price"`
+	ProductID   uint    `json:"product_id"`
+	ProductName string  `json:"product_name"`
+	Quantity    int     `json:"quantity"`
+	Price       float64 `json:"price"`
+	SalePrice   float64 `json:"sale_price"`
 }
 
 type CheckoutResponse struct {

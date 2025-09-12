@@ -3,12 +3,23 @@ package routes_admin
 import (
 	"fmt"
 	"strconv"
+	"fmt"
+	"strconv"
 	"Bakery_Pos/db"
 	"Bakery_Pos/models"
 
 	"github.com/gofiber/fiber/v2"
 )
 
+// CreateProduct godoc
+// @Summary Create a new product
+// @Description Add a new product to the database
+// @Tags product
+// @Accept json
+// @Produce json
+// @Param request body models.BodyProductRequest true "Product data"
+// @Success 201 {object} models.ProductResponse
+// @Router /products [post]
 // CreateProduct godoc
 // @Summary Create a new product
 // @Description Add a new product to the database
