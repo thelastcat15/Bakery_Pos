@@ -1,0 +1,577 @@
+basePath: /api
+definitions:
+  models.BodyProductRequest:
+    properties:
+      description:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+      price:
+        type: number
+      stock:
+        type: integer
+      tag:
+        type: string
+    type: object
+  models.CartItemResponse:
+    properties:
+      price:
+        type: number
+      product_id:
+        type: integer
+      product_name:
+        type: string
+      quantity:
+        type: integer
+      sale_price:
+        type: number
+    type: object
+  models.CheckoutResponse:
+    properties:
+      message:
+        type: string
+      order_id:
+        type: integer
+      status:
+        type: string
+      total:
+        type: number
+    type: object
+  models.FormEditCart:
+    properties:
+      quantity:
+        type: integer
+    type: object
+  models.FormRequest:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  models.FormSetting:
+    properties:
+      phone_number:
+        type: string
+      place:
+        type: string
+    type: object
+  models.ImageResponse:
+    properties:
+      file_name:
+        type: string
+      id:
+        type: integer
+      order:
+        type: integer
+      public_url:
+        type: string
+      upload_url:
+        type: string
+    type: object
+  models.ImagesArrayResponse:
+    properties:
+      images:
+        items:
+          $ref: '#/definitions/models.ImageResponse'
+        type: array
+    type: object
+  models.ImagesRequest:
+    properties:
+      images:
+        items:
+          properties:
+            order:
+              type: integer
+          type: object
+        type: array
+    type: object
+  models.MessageResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  models.OrderItem:
+    properties:
+      description:
+        type: string
+      imageURL:
+        type: string
+      name:
+        type: string
+      orderID:
+        type: integer
+      price:
+        format: float64
+        type: number
+      productID:
+        type: integer
+      quantity:
+        type: integer
+      tag:
+        type: string
+    type: object
+  models.OrderResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/models.OrderItem'
+        type: array
+      order_id:
+        type: integer
+      status:
+        type: string
+      total:
+        type: number
+    type: object
+  models.ProductResponse:
+    properties:
+      description:
+        type: string
+      id:
+        type: integer
+      images:
+        items:
+          $ref: '#/definitions/models.ImageResponse'
+        type: array
+      is_active:
+        type: boolean
+      name:
+        type: string
+      price:
+        type: number
+      stock:
+        type: integer
+      tag:
+        type: string
+    type: object
+  models.UploadOrderSlipResponse:
+    properties:
+      upload_url:
+        type: string
+    type: object
+  models.UserResponse:
+    properties:
+      message:
+        type: string
+      user:
+        properties:
+          exp:
+            type: integer
+          role:
+            type: string
+          userid:
+            type: string
+          username:
+            type: string
+        type: object
+    type: object
+host: localhost:3000
+info:
+  contact: {}
+  description: This is a Bakery POS API documentation
+  title: Bakery POS API
+  version: "1.0"
+paths:
+  /cart:
+    delete:
+      description: Remove all items in user's cart
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.MessageResponse'
+      summary: Delete user's cart
+      tags:
+      - Cart
+    get:
+      description: Retrieve the current user's cart items
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.CartItemResponse'
+            type: array
+      summary: Get user's cart
+      tags:
+      - Cart
+  /cart/{product_id}:
+    put:
+      consumes:
+      - application/json
+      description: Increase or decrease quantity of a product in the user's cart
+      parameters:
+      - description: Product ID
+        in: path
+        name: product_id
+        required: true
+        type: integer
+      - description: Quantity change
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.FormEditCart'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.CartItemResponse'
+            type: array
+      summary: Update product quantity in cart
+      tags:
+      - Cart
+  /cart/checkout:
+    post:
+      description: Convert user's cart to an order
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.CheckoutResponse'
+      summary: Checkout cart
+      tags:
+      - Cart
+  /order:
+    get:
+      description: Retrieve all orders of the logged-in user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.OrderResponse'
+            type: array
+      summary: Get all orders for the current user
+      tags:
+      - Order
+  /order/{order_id}:
+    delete:
+      description: Delete a single order of the logged-in user
+      parameters:
+      - description: Order ID
+        in: path
+        name: order_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.MessageResponse'
+      summary: Delete an order
+      tags:
+      - Order
+    get:
+      description: Retrieve a single order of the logged-in user
+      parameters:
+      - description: Order ID
+        in: path
+        name: order_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.OrderResponse'
+      summary: Get a single order by ID
+      tags:
+      - Order
+  /order/{order_id}/upload-slip:
+    post:
+      consumes:
+      - application/json
+      description: Generates a temporary signed URL for uploading an order payment
+        slip
+      parameters:
+      - description: Order ID
+        in: path
+        name: order_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UploadOrderSlipResponse'
+      summary: Generate signed URL for uploading order slip
+      tags:
+      - Orders
+  /products:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all products with their images
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.ProductResponse'
+            type: array
+      summary: Get all products
+      tags:
+      - product
+    post:
+      consumes:
+      - application/json
+      - application/json
+      description: |-
+        Add a new product to the database
+        Add a new product to the database
+      parameters:
+      - description: Product data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.BodyProductRequest'
+      - description: Product data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.BodyProductRequest'
+      produces:
+      - application/json
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.ProductResponse'
+      summary: Create a new product
+      tags:
+      - product
+      - product
+  /products/{id}:
+    delete:
+      description: Remove a product from the database by ID
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+      summary: Delete a product
+      tags:
+      - product
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a single product with its images, sorted by order ascending
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ProductResponse'
+      summary: Get a single product by ID
+      tags:
+      - product
+    put:
+      consumes:
+      - application/json
+      description: Update an existing product by ID
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated product data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.BodyProductRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ProductResponse'
+      summary: Update a product
+      tags:
+      - product
+  /products/{id}/images:
+    delete:
+      consumes:
+      - application/json
+      description: Remove images from storage and database
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Image IDs
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.ImagesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.MessageResponse'
+      summary: Delete one or multiple images for a product
+      tags:
+      - product-images
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all images for a product, sorted by order ascending
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ImagesArrayResponse'
+      summary: Get all images for a product
+      tags:
+      - product-images
+    post:
+      consumes:
+      - application/json
+      description: Generate signed URLs for uploading multiple images and store them
+        in the database
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Images data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.ImagesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.ImagesArrayResponse'
+            type: array
+      summary: Upload multiple images for a product
+      tags:
+      - product-images
+  /user/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user and return JWT token
+      parameters:
+      - description: User login data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.FormRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UserResponse'
+      summary: Login user
+      tags:
+      - user
+  /user/register:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user account and return JWT token
+      parameters:
+      - description: User registration data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.FormRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.UserResponse'
+      summary: Register a new user
+      tags:
+      - user
+  /user/settings:
+    put:
+      consumes:
+      - application/json
+      description: Update phone number or place for authenticated user
+      parameters:
+      - description: Update settings
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.FormSetting'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.MessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Update user settings
+      tags:
+      - user
+schemes:
+- http
+swagger: "2.0"
