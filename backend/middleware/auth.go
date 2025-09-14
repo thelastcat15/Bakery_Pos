@@ -33,8 +33,39 @@ func Auth(c *fiber.Ctx) error {
 		})
 	}
 
-	// Set user info in Locals for downstream use
 	c.Locals("role", claims["role"])
 	c.Locals("userid", claims["userid"])
+	return c.Next()
+}
+
+func AuthOptional(c *fiber.Ctx) error {
+	authCookie := c.Cookies("Authorization")
+	if authCookie == "" || !strings.HasPrefix(authCookie, "Bearer ") {
+		c.Locals("role", "guest")
+		return c.Next()
+	}
+
+	tokenString := strings.TrimPrefix(authCookie, "Bearer ")
+	secret := os.Getenv("JWT_SECRET")
+
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return []byte(secret), nil
+	})
+	if err != nil || !token.Valid {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Invalid token",
+		})
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Invalid token claims",
+		})
+	}
+
+	c.Locals("role", claims["role"])
+	c.Locals("userid", claims["userid"])
+
 	return c.Next()
 }

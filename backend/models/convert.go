@@ -2,13 +2,12 @@ package models
 
 func (img *Image) ToResponse(isAdmin bool) ImageResponse {
 	resp := ImageResponse{
-		ID:        img.ID,
-		FileName:  img.FileName,
 		Order:     img.Order,
 		PublicURL: img.PublicURL,
 	}
 
 	if isAdmin {
+		resp.FileName = img.FileName
 		resp.UploadURL = img.UploadURL
 	}
 	return resp
@@ -30,4 +29,14 @@ func (p *Product) ToResponse(isAdmin bool) ProductResponse {
 		IsActive:    p.IsActive,
 		Images:      images,
 	}
+}
+
+func (order *Order) ToResponse(isAdmin bool) OrderResponse {
+	resp := OrderResponse{
+		OrderID: order.ID,
+		Total:   order.Total,
+		Status:  order.Status,
+		Items:   order.Items,
+	}
+	return resp
 }

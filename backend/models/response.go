@@ -4,6 +4,10 @@ import (
 	"github.com/google/uuid"
 )
 
+type MessageResponse struct {
+	Message 	string     `json:"message"`
+}
+
 type UserResponse struct {
 	Message string `json:"message"`
 	User    struct {
@@ -25,7 +29,7 @@ type ProductResponse struct {
   Images      []ImageResponse     `json:"images,omitempty"`
 }
 
-type UploadImagesResponse struct {
+type ImagesArrayResponse struct {
   Images []ImageResponse `json:"images"`
 }
 
@@ -52,6 +56,13 @@ type CheckoutResponse struct {
 	Status  string  `json:"status"`
 }
 
-type MessageResponse struct {
-	Message 	string     `json:"message"`
+type OrderResponse struct {
+	OrderID uint        `json:"order_id"`
+	Total   float64     `json:"total"`
+	Status  string      `json:"status"`
+	Items   []OrderItem `json:"items"`
+}
+
+type UploadOrderSlipResponse struct {
+	UploadURL string `json:"upload_url"`
 }

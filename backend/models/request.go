@@ -23,8 +23,8 @@ type BodyProductRequest struct {
 	IsActive    bool         `json:"is_active" gorm:"default:true"`
 }
 
-type UploadImagesRequest struct {
-  Images []struct {
-    Order int `json:"order"`
-  } `json:"images"`
+type ImagesRequest struct {
+	Images []struct {
+		Order int `json:"order"`
+	} `json:"images"`
 }

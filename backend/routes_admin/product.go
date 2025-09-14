@@ -117,12 +117,12 @@ func DeleteProduct(c *fiber.Ctx) error {
 // UploadImagesProduct godoc
 // @Summary Upload multiple images for a product
 // @Description Generate signed URLs for uploading multiple images and store them in the database
-// @Tags product
+// @Tags product-images
 // @Accept json
 // @Produce json
 // @Param id path int true "Product ID"
-// @Param request body models.UploadImagesRequest true "Images data"
-// @Success 200 {array} models.UploadImagesResponse
+// @Param request body models.ImagesRequest true "Images data"
+// @Success 200 {array} models.ImagesArrayResponse
 // @Router /products/{id}/images [post]
 func UploadImagesProduct(c *fiber.Ctx) error {
 	idStr := c.Params("id")
@@ -131,7 +131,7 @@ func UploadImagesProduct(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid product ID"})
 	}
 
-	var body models.UploadImagesRequest
+	var body models.ImagesRequest
 	if err := c.BodyParser(&body); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request payload"})
 	}
@@ -143,11 +143,8 @@ func UploadImagesProduct(c *fiber.Ctx) error {
 
 	var results []models.ImageResponse
 
-	for i, imgReq := range body.Images {
+	for _, imgReq := range body.Images {
 		order := imgReq.Order
-		if order < 1 {
-			order = i + 1
-		}
 
 		fileName := fmt.Sprintf("%d-%d.png", product.ID, order)
 		filePath := fmt.Sprintf("products/%d/%s", product.ID, fileName)
@@ -178,7 +175,69 @@ func UploadImagesProduct(c *fiber.Ctx) error {
 		results = append(results, image.ToResponse(true))
 	}
 
-	return c.Status(fiber.StatusOK).JSON(models.UploadImagesResponse{
+	return c.Status(fiber.StatusOK).JSON(models.ImagesArrayResponse{
 		Images: results,
 	})
 }
+
+// DeleteImagesProduct godoc
+// @Summary Delete one or multiple images for a product
+// @Description Remove images from storage and database
+// @Tags product-images
+// @Accept json
+// @Produce json
+// @Param id path int true "Product ID"
+// @Param request body models.ImagesRequest true "Image IDs"
+// @Success 200 {object} models.MessageResponse
+// @Router /products/{id}/images [delete]
+func DeleteImagesProduct(c *fiber.Ctx) error {
+	idStr := c.Params("id")
+	productID, err := strconv.Atoi(idStr)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid product ID"})
+	}
+
+	var body models.ImagesRequest
+	if err := c.BodyParser(&body); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request payload"})
+	}
+
+	if len(body.Images) == 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "No images provided"})
+	}
+
+	// collect orders
+	var orders []int
+	for _, img := range body.Images {
+		orders = append(orders, img.Order)
+	}
+
+	var images []models.Image
+	if err := db.DB.Where("product_id = ? AND `order` IN ?", productID, orders).Find(&images).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	if len(images) == 0 {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "No images found"})
+	}
+
+	// collect file paths
+	var filePaths []string
+	for _, img := range images {
+		filePaths = append(filePaths, img.FilePath)
+	}
+
+	if _, err := db.Storage.RemoveFile("product-images", filePaths); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	// delete from db
+	if err := db.DB.Where("product_id = ? AND `order` IN ?", productID, orders).Delete(&models.Image{}).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(models.MessageResponse{
+		Message: "Images deleted successfully",
+	})
+}
+
