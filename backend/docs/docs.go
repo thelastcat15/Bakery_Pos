@@ -120,9 +120,120 @@ const docTemplate = `{
                 }
             }
         },
-        "/products": {
+        "/order": {
+            "get": {
+                "description": "Retrieve all orders of the logged-in user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Order"
+                ],
+                "summary": "Get all orders for the current user",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.OrderResponse"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/order/{order_id}": {
+            "get": {
+                "description": "Retrieve a single order of the logged-in user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Order"
+                ],
+                "summary": "Get a single order by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Order ID",
+                        "name": "order_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.OrderResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete a single order of the logged-in user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Order"
+                ],
+                "summary": "Delete an order",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Order ID",
+                        "name": "order_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.MessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/order/{order_id}/upload-slip": {
             "post": {
-                "description": "Add a new product to the database",
+                "description": "Generates a temporary signed URL for uploading an order payment slip",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Generate signed URL for uploading order slip",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Order ID",
+                        "name": "order_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.UploadOrderSlipResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/products": {
+            "get": {
+                "description": "Retrieve all products with their images",
                 "consumes": [
                     "application/json"
                 ],
@@ -132,8 +243,44 @@ const docTemplate = `{
                 "tags": [
                     "product"
                 ],
+                "summary": "Get all products",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.ProductResponse"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Add a new product to the database\nAdd a new product to the database",
+                "consumes": [
+                    "application/json",
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json",
+                    "application/json"
+                ],
+                "tags": [
+                    "product",
+                    "product"
+                ],
                 "summary": "Create a new product",
                 "parameters": [
+                    {
+                        "description": "Product data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.BodyProductRequest"
+                        }
+                    },
                     {
                         "description": "Product data",
                         "name": "request",
@@ -155,6 +302,36 @@ const docTemplate = `{
             }
         },
         "/products/{id}": {
+            "get": {
+                "description": "Retrieve a single product with its images, sorted by order ascending",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "product"
+                ],
+                "summary": "Get a single product by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Product ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.ProductResponse"
+                        }
+                    }
+                }
+            },
             "put": {
                 "description": "Update an existing product by ID",
                 "consumes": [
@@ -217,6 +394,36 @@ const docTemplate = `{
             }
         },
         "/products/{id}/images": {
+            "get": {
+                "description": "Retrieve all images for a product, sorted by order ascending",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "product-images"
+                ],
+                "summary": "Get all images for a product",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Product ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.ImagesArrayResponse"
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "Generate signed URLs for uploading multiple images and store them in the database",
                 "consumes": [
@@ -226,7 +433,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "product"
+                    "product-images"
                 ],
                 "summary": "Upload multiple images for a product",
                 "parameters": [
@@ -243,7 +450,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.UploadImagesRequest"
+                            "$ref": "#/definitions/models.ImagesRequest"
                         }
                     }
                 ],
@@ -253,8 +460,47 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.UploadImagesResponse"
+                                "$ref": "#/definitions/models.ImagesArrayResponse"
                             }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Remove images from storage and database",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "product-images"
+                ],
+                "summary": "Delete one or multiple images for a product",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Product ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Image IDs",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.ImagesRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.MessageResponse"
                         }
                     }
                 }
@@ -459,25 +705,50 @@ const docTemplate = `{
                 }
             }
         },
-        "models.ImageRequest": {
-            "type": "object",
-            "properties": {
-                "order": {
-                    "type": "integer"
-                }
-            }
-        },
         "models.ImageResponse": {
             "type": "object",
             "properties": {
                 "file_name": {
                     "type": "string"
                 },
+                "id": {
+                    "type": "integer"
+                },
                 "order": {
                     "type": "integer"
                 },
+                "public_url": {
+                    "type": "string"
+                },
                 "upload_url": {
                     "type": "string"
+                }
+            }
+        },
+        "models.ImagesArrayResponse": {
+            "type": "object",
+            "properties": {
+                "images": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.ImageResponse"
+                    }
+                }
+            }
+        },
+        "models.ImagesRequest": {
+            "type": "object",
+            "properties": {
+                "images": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "order": {
+                                "type": "integer"
+                            }
+                        }
+                    }
                 }
             }
         },
@@ -489,11 +760,64 @@ const docTemplate = `{
                 }
             }
         },
+        "models.OrderItem": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "imageURL": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "orderID": {
+                    "type": "integer"
+                },
+                "price": {
+                    "type": "number",
+                    "format": "float64"
+                },
+                "productID": {
+                    "type": "integer"
+                },
+                "quantity": {
+                    "type": "integer"
+                },
+                "tag": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.OrderResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.OrderItem"
+                    }
+                },
+                "order_id": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "total": {
+                    "type": "number"
+                }
+            }
+        },
         "models.ProductResponse": {
             "type": "object",
             "properties": {
                 "description": {
                     "type": "string"
+                },
+                "id": {
+                    "type": "integer"
                 },
                 "images": {
                     "type": "array",
@@ -518,25 +842,11 @@ const docTemplate = `{
                 }
             }
         },
-        "models.UploadImagesRequest": {
+        "models.UploadOrderSlipResponse": {
             "type": "object",
             "properties": {
-                "images": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.ImageRequest"
-                    }
-                }
-            }
-        },
-        "models.UploadImagesResponse": {
-            "type": "object",
-            "properties": {
-                "images": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.ImageResponse"
-                    }
+                "upload_url": {
+                    "type": "string"
                 }
             }
         },

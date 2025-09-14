@@ -31,7 +31,9 @@ func main() {
 	db.Connect_DB()
 	db.Connect_Storage()
 
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		StrictRouting: false,
+	})
 	app.Use(cors.New())
 
 	api := app.Group("/api")
@@ -42,14 +44,16 @@ func main() {
 	user.Get("/setting", routes.UpdateSetting)
 
 	product := api.Group("/products")
-	product.Get("/", routes.GetProducts)
+	product.Get("/", middleware.AuthOptional, routes.GetProducts)
 	product.Post("/", middleware.Auth, middleware.Admin, routes_admin.CreateProduct)
 
 	product_select := product.Group("/:id")
-	product_select.Get("/", routes.GetProductByID)
+	product_select.Get("/", middleware.AuthOptional, routes.GetProductByID)
 	product_select.Put("/", middleware.Auth, middleware.Admin, routes_admin.UpdateProduct)
 	product_select.Delete("/", middleware.Auth, middleware.Admin, routes_admin.DeleteProduct)
+	product_select.Get("/images", middleware.AuthOptional, routes.GetImagesProduct)
 	product_select.Post("/images", middleware.Auth, middleware.Admin, routes_admin.UploadImagesProduct)
+	product_select.Post("/images", middleware.Auth, middleware.Admin, routes_admin.DeleteImagesProduct)
 
 	cart := api.Group("/cart", middleware.Auth)
 	cart.Get("/", routes.GetCart)
@@ -57,9 +61,11 @@ func main() {
 	cart.Put("/:product_id", routes.UpdateProductCart)
 	cart.Post("/checkout", routes.Checkout)
 
-	// order := api.Group("/order", middleware.Auth)
-	// order.Get("/", routes.GetAllOrders)
-	// order.Get("/:order_id", routes.GetOrder)
+	order := api.Group("/order", middleware.Auth)
+	order.Get("/", routes.GetAllOrders)
+	order.Get("/:order_id", routes.GetOrderByID)
+	order.Delete("/:order_id", routes.DeleteOrder)
+	order.Post("/:order_id/upload-slip", routes.GenerateOrderSlipURL)
 
 	// admin := api.Group("/admin", middleware.Auth, middleware.Admin)
 	// admin.Post("/edit-stock", routes.EditStock)
