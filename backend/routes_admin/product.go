@@ -18,15 +18,6 @@ import (
 // @Param request body models.BodyProductRequest true "Product data"
 // @Success 201 {object} models.ProductResponse
 // @Router /products [post]
-// CreateProduct godoc
-// @Summary Create a new product
-// @Description Add a new product to the database
-// @Tags product
-// @Accept json
-// @Produce json
-// @Param request body models.BodyProductRequest true "Product data"
-// @Success 201 {object} models.ProductResponse
-// @Router /products [post]
 func CreateProduct(c *fiber.Ctx) error {
   var req models.BodyProductRequest
   if err := c.BodyParser(&req); err != nil {
@@ -122,7 +113,7 @@ func DeleteProduct(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Product ID"
 // @Param request body models.ImagesRequest true "Images data"
-// @Success 200 {array} models.ImagesArrayResponse
+// @Success 200 {object} models.ImagesArrayResponse
 // @Router /products/{id}/images [post]
 func UploadImagesProduct(c *fiber.Ctx) error {
 	idStr := c.Params("id")
