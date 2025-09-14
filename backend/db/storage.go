@@ -10,17 +10,18 @@ import (
 var Storage *storage_go.Client
 
 func Connect_Storage() {
-	accessKey := os.Getenv("STORAGE_ACCESS")
-	if accessKey == "" {
+	storageUrl := os.Getenv("STORAGE_URL")
+	if storageUrl == "" {
 		log.Fatal("STORAGE_ACCESS is not set")
 	}
-	secretKey := os.Getenv("STORAGE_SECRET")
-	if secretKey == "" {
+	accessKey := os.Getenv("STORAGE_ACCESS")
+	if accessKey == "" {
 		log.Fatal("STORAGE_SECRET is not set")
 	}
 
-	Storage = storage_go.NewClient("https://"+accessKey+"/storage/v1", secretKey, nil)
+	Storage = storage_go.NewClient(storageUrl, "Bearer "+accessKey, nil)
 	Storage.CreateBucket("product-images", storage_go.BucketOptions{
 		Public: true,
 	})
+	log.Println("✅ Connected to Supabase Storage")
 }

@@ -9,7 +9,7 @@ type Order struct {
 	gorm.Model
 	UserID uuid.UUID   `gorm:"not null;index"`
 	Total  float64
-	Status string
+  Status string      `gorm:"type:enum('pending','confirmed','shipping','delivered');default:'pending'"`
 	Items  []OrderItem `gorm:"constraint:OnDelete:CASCADE;"`
 }
 

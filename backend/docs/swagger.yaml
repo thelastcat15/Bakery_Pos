@@ -10,7 +10,7 @@ definitions:
         type: string
       price:
         type: number
-      stock:
+      quantity:
         type: integer
       tag:
         type: string
@@ -128,7 +128,9 @@ definitions:
     type: object
   models.ProductResponse:
     properties:
-      description:
+      category:
+        type: string
+      detail:
         type: string
       id:
         type: integer
@@ -142,10 +144,8 @@ definitions:
         type: string
       price:
         type: number
-      stock:
+      quantity:
         type: integer
-      tag:
-        type: string
     type: object
   models.UploadOrderSlipResponse:
     properties:
@@ -168,7 +168,7 @@ definitions:
             type: string
         type: object
     type: object
-host: localhost:3000
+host: localhost:5000
 info:
   contact: {}
   description: This is a Bakery POS API documentation
@@ -338,17 +338,8 @@ paths:
     post:
       consumes:
       - application/json
-      - application/json
-      description: |-
-        Add a new product to the database
-        Add a new product to the database
+      description: Add a new product to the database
       parameters:
-      - description: Product data
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/models.BodyProductRequest'
       - description: Product data
         in: body
         name: request
@@ -357,7 +348,6 @@ paths:
           $ref: '#/definitions/models.BodyProductRequest'
       produces:
       - application/json
-      - application/json
       responses:
         "201":
           description: Created
@@ -365,7 +355,6 @@ paths:
             $ref: '#/definitions/models.ProductResponse'
       summary: Create a new product
       tags:
-      - product
       - product
   /products/{id}:
     delete:
@@ -498,9 +487,7 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/models.ImagesArrayResponse'
-            type: array
+            $ref: '#/definitions/models.ImagesArrayResponse'
       summary: Upload multiple images for a product
       tags:
       - product-images

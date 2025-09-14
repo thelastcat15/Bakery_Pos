@@ -9,7 +9,7 @@
         "contact": {},
         "version": "1.0"
     },
-    "host": "localhost:3000",
+    "host": "localhost:5000",
     "basePath": "/api",
     "paths": {
         "/cart": {
@@ -254,30 +254,18 @@
                 }
             },
             "post": {
-                "description": "Add a new product to the database\nAdd a new product to the database",
+                "description": "Add a new product to the database",
                 "consumes": [
-                    "application/json",
                     "application/json"
                 ],
                 "produces": [
-                    "application/json",
                     "application/json"
                 ],
                 "tags": [
-                    "product",
                     "product"
                 ],
                 "summary": "Create a new product",
                 "parameters": [
-                    {
-                        "description": "Product data",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.BodyProductRequest"
-                        }
-                    },
                     {
                         "description": "Product data",
                         "name": "request",
@@ -455,10 +443,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.ImagesArrayResponse"
-                            }
+                            "$ref": "#/definitions/models.ImagesArrayResponse"
                         }
                     }
                 }
@@ -627,7 +612,7 @@
                 "price": {
                     "type": "number"
                 },
-                "stock": {
+                "quantity": {
                     "type": "integer"
                 },
                 "tag": {
@@ -810,7 +795,10 @@
         "models.ProductResponse": {
             "type": "object",
             "properties": {
-                "description": {
+                "category": {
+                    "type": "string"
+                },
+                "detail": {
                     "type": "string"
                 },
                 "id": {
@@ -831,11 +819,8 @@
                 "price": {
                     "type": "number"
                 },
-                "stock": {
+                "quantity": {
                     "type": "integer"
-                },
-                "tag": {
-                    "type": "string"
                 }
             }
         },

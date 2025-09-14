@@ -257,30 +257,18 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "description": "Add a new product to the database\nAdd a new product to the database",
+                "description": "Add a new product to the database",
                 "consumes": [
-                    "application/json",
                     "application/json"
                 ],
                 "produces": [
-                    "application/json",
                     "application/json"
                 ],
                 "tags": [
-                    "product",
                     "product"
                 ],
                 "summary": "Create a new product",
                 "parameters": [
-                    {
-                        "description": "Product data",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.BodyProductRequest"
-                        }
-                    },
                     {
                         "description": "Product data",
                         "name": "request",
@@ -458,10 +446,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.ImagesArrayResponse"
-                            }
+                            "$ref": "#/definitions/models.ImagesArrayResponse"
                         }
                     }
                 }
@@ -630,7 +615,7 @@ const docTemplate = `{
                 "price": {
                     "type": "number"
                 },
-                "stock": {
+                "quantity": {
                     "type": "integer"
                 },
                 "tag": {
@@ -813,7 +798,10 @@ const docTemplate = `{
         "models.ProductResponse": {
             "type": "object",
             "properties": {
-                "description": {
+                "category": {
+                    "type": "string"
+                },
+                "detail": {
                     "type": "string"
                 },
                 "id": {
@@ -834,11 +822,8 @@ const docTemplate = `{
                 "price": {
                     "type": "number"
                 },
-                "stock": {
+                "quantity": {
                     "type": "integer"
-                },
-                "tag": {
-                    "type": "string"
                 }
             }
         },
@@ -881,7 +866,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:3000",
+	Host:             "localhost:5000",
 	BasePath:         "/api",
 	Schemes:          []string{"http"},
 	Title:            "Bakery POS API",
