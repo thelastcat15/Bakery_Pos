@@ -22,9 +22,9 @@ type ProductResponse struct {
 	ID 				  uint         			`json:"id"`
   Name        string       				`json:"name"`
   Description string       				`json:"description"`
-  Tag         string       				`json:"tag"`
+  Tag         string       				`json:"category"`
   Price       float64      				`json:"price"`
-  Stock       int          				`json:"stock"`
+  Stock       int          				`json:"quantity"`
   IsActive    bool         				`json:"is_active"`
   Images      []ImageResponse     `json:"images,omitempty"`
 }
