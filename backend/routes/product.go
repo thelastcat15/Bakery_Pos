@@ -1,9 +1,10 @@
 package routes
 
 import (
-	"strconv"
 	"Bakery_Pos/db"
 	"Bakery_Pos/models"
+	"fmt"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -18,7 +19,7 @@ import (
 // @Router /products [get]
 func GetProducts(c *fiber.Ctx) error {
 	var products []models.Product
-	if err := db.DB.Preload("Images").Find(&products).Error; err != nil {
+	if err := db.DB.Preload("images").Find(&products).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to fetch products",
 		})
@@ -57,10 +58,10 @@ func GetProductByID(c *fiber.Ctx) error {
 	} else {
 		isAdmin = false
 	}
-	
+
 	id := c.Params("id")
 	var product models.Product
-	if err := db.DB.Preload("Images").First(&product, id).Error; err != nil {
+	if err := db.DB.Preload("images").First(&product, id).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"error": "Product not found",
 		})
@@ -93,7 +94,7 @@ func GetImagesProduct(c *fiber.Ctx) error {
 	if err := db.DB.Where("product_id = ?", productID).Order("`order` ASC").Find(&images).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
-	
+
 	role, ok := c.Locals("role").(string)
 	var isAdmin bool
 	if ok && role == "Admin" {
@@ -103,10 +104,23 @@ func GetImagesProduct(c *fiber.Ctx) error {
 	}
 
 	responses := make([]models.ImageResponse, 0, len(images))
-	for _, img := range images {
+
+	for i := range images {
+		img := &images[i]
+		if img.PublicURL == nil || *img.PublicURL == "" {
+			result := db.Storage.GetPublicUrl("test", img.FileName) // use actual file name
+			if result.SignedURL != "" {
+				img.PublicURL = &result.SignedURL
+
+				if err := db.DB.Model(img).Update("public_url", img.PublicURL).Error; err != nil {
+					fmt.Println("Failed to update public URL for image", img.ID, ":", err)
+				}
+			}
+		}
+
 		responses = append(responses, img.ToResponse(isAdmin))
 	}
-	
+
 	return c.Status(fiber.StatusOK).JSON(models.ImagesArrayResponse{
 		Images: responses,
 	})

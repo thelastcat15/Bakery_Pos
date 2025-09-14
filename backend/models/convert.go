@@ -2,8 +2,11 @@ package models
 
 func (img *Image) ToResponse(isAdmin bool) ImageResponse {
 	resp := ImageResponse{
-		Order:     img.Order,
-		PublicURL: img.PublicURL,
+		Order: img.Order,
+	}
+
+	if img.PublicURL != nil && *img.PublicURL != "" {
+		resp.PublicURL = img.PublicURL
 	}
 
 	if isAdmin {

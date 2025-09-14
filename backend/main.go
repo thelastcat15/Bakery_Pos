@@ -20,7 +20,7 @@ import (
 // @title Bakery POS API
 // @version 1.0
 // @description This is a Bakery POS API documentation
-// @host localhost:3000
+// @host localhost:5000
 // @BasePath /api
 // @schemes http
 func main() {
@@ -35,7 +35,12 @@ func main() {
 	app := fiber.New(fiber.Config{
 		StrictRouting: false,
 	})
-	app.Use(cors.New())
+	app.Use(cors.New(cors.Config{
+		AllowOrigins:     "http://localhost:3000,http://localhost:5000",
+		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
+		AllowMethods:     "GET,POST,PUT,DELETE",
+		AllowCredentials: true,
+	}))
 
 	api := app.Group("/api")
 

@@ -6,6 +6,7 @@ import (
 
 	storage_go "github.com/supabase-community/storage-go"
 )
+
 var Storage *storage_go.Client
 
 func Connect_Storage() {
@@ -18,5 +19,8 @@ func Connect_Storage() {
 		log.Fatal("STORAGE_SECRET is not set")
 	}
 
-  Storage = storage_go.NewClient("https://"+accessKey+"/storage/v1", secretKey, nil)
+	Storage = storage_go.NewClient("https://"+accessKey+"/storage/v1", secretKey, nil)
+	Storage.CreateBucket("product-images", storage_go.BucketOptions{
+		Public: true,
+	})
 }

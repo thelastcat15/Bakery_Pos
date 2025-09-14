@@ -1,9 +1,5 @@
 import { Product } from "./product_type"
 
-export interface OrderItem extends Product {
-  quantity: number
-}
-
 export interface CustomerInfo {
   name: string
   phone: string
@@ -13,7 +9,7 @@ export interface CustomerInfo {
 export interface Order {
   id: string
   date: string
-  items: OrderItem[]
+  items: Product[]
   customerInfo: CustomerInfo
   total: number
   status: "pending" | "confirmed" | "shipping" | "delivered"

@@ -144,7 +144,7 @@ const CheckoutPage = () => {
                     </p>
                   </div>
                   <p className="font-medium">
-                    ฿{(item.price * item.quantity).toLocaleString()}
+                    ฿{(item.price * item.quantity!!).toLocaleString()}
                   </p>
                 </div>
               ))}
@@ -338,7 +338,7 @@ const CheckoutPage = () => {
                 </PrimaryButton>
               ) : (
                 <div className="bg-gray-100 rounded-lg p-4 text-center">
-                  <p className="text-gray-500">ไม่มสินค้าในตะกร้า</p>
+                  <p className="text-gray-500">ไม่มีสินค้าในตะกร้า</p>
                 </div>
               )}
             </div>

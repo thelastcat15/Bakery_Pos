@@ -1,77 +1,22 @@
 "use client"
 
-import { createProduct } from "@/services/product_service"
+import {
+  createProduct,
+  getImagesById,
+  uploadImageProduct,
+} from "@/services/product_service"
 import { Product } from "@/types/product_type"
 import { useState } from "react"
-
-// Mock data
-const mockProducts: Product[] = [
-  {
-    id: 1,
-    name: "กาแฟ Americano",
-    category: "drink",
-    price: 120,
-    stock: 15,
-    image: "/images/products/americano.jpg",
-    detail: "กาแฟอเมริกาโน่ รสชาติเข้มข้น หอมกรุ่น",
-  },
-  {
-    id: 2,
-    name: "ชาเขียว",
-    category: "drink",
-    price: 80,
-    stock: 8,
-    image: "/images/products/green-tea.jpg",
-    detail: "ชาเขียวคุณภาพพรีเมียม กลิ่นหอมธรรมชาติ",
-  },
-  {
-    id: 3,
-    name: "คัพเค้ก",
-    category: "cake",
-    price: 125,
-    stock: 5,
-    image: "/images/products/cupcakes.jpg",
-    detail: "คัพเค้กเนื้อนุ่ม หวานกำลังดี",
-  },
-  {
-    id: 4,
-    name: "เค้กช็อกโกแลต",
-    category: "cake",
-    price: 180,
-    stock: 12,
-    image: "/images/products/chocolate-cake.jpg",
-    detail: "เค้กช็อกโกแลตเนื้อนุ่ม รสเข้มข้น",
-  },
-  {
-    id: 5,
-    name: "คุกกี้",
-    category: "cookie",
-    price: 100,
-    stock: 20,
-    image: "/images/products/cookies.jpg",
-    detail: "คุกกี้เนื้อกรอบ รสหวานหอม",
-  },
-  {
-    id: 6,
-    name: "โดนัท",
-    category: "donut",
-    price: 65,
-    stock: 3,
-    image: "/images/products/donut.jpg",
-    detail: "โดนัทนุ่มหวาน หลากหลายรสชาติ",
-  },
-]
 
 const categories = ["drink", "cake", "cookie", "donut"]
 
 const ProductManagement = () => {
-  const [products, setProducts] = useState<Product[]>(mockProducts)
+  const [products, setProducts] = useState<Product[]>([])
   const [newProduct, setNewProduct] = useState({
     name: "",
     category: "",
     price: "",
-    stock: "",
-    image: "",
+    quantity: "",
     detail: "",
   })
   const [imageFile, setImageFile] = useState<File | null>(null)
@@ -86,7 +31,7 @@ const ProductManagement = () => {
       reader.onload = (e) => {
         const result = e.target?.result as string
         setImagePreview(result)
-        setNewProduct({ ...newProduct, image: result }) // must get URL from backend after upload
+        setNewProduct({ ...newProduct })
       }
       reader.readAsDataURL(file)
       setImageFile(file)
@@ -107,19 +52,15 @@ const ProductManagement = () => {
   }
 
   const handleCreateProduct = async (productData: Omit<Product, "id">) => {
-    //  upload รูปก่อน แล้วได้ URL กลับมา
     try {
       // สร้างสินค้า
       const response = await createProduct(productData)
+      if (!response.id) return
 
+      // upload รูป
       if (imageFile) {
-        const formData = new FormData()
-        formData.append("image", imageFile)
-        const uploadResponse = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
-        })
-        const { imageUrl } = await uploadResponse.json()
+        const uploadResponse = await uploadImageProduct(response.id, imageFile)
+        const imageUrl = await getImagesById(response.id)
         productData.image = imageUrl
       }
 
@@ -136,8 +77,7 @@ const ProductManagement = () => {
       newProduct.name &&
       newProduct.category &&
       newProduct.price &&
-      newProduct.stock &&
-      newProduct.image &&
+      newProduct.quantity &&
       newProduct.detail
     ) {
       try {
@@ -145,19 +85,19 @@ const ProductManagement = () => {
           name: newProduct.name,
           category: newProduct.category,
           price: parseInt(newProduct.price),
-          stock: parseInt(newProduct.stock),
-          image: newProduct.image,
+          quantity: parseInt(newProduct.quantity),
           detail: newProduct.detail,
         }
 
-        const createdProduct = await createProduct(productToCreate)
-        setProducts([...products, createdProduct])
+        const createdProduct = await handleCreateProduct(productToCreate)
+        if (createdProduct && "id" in createdProduct) {
+          setProducts([...products, createdProduct as Product])
+        }
         setNewProduct({
           name: "",
           category: "",
           price: "",
-          stock: "",
-          image: "",
+          quantity: "",
           detail: "",
         })
         setImageFile(null)
@@ -170,10 +110,12 @@ const ProductManagement = () => {
   }
 
   const handleUpdateProduct = (
-    productId: number,
+    productId: number | undefined,
     field: keyof Product,
     value: string | number
   ) => {
+    if (!productId) return
+
     setProducts(
       products.map((p) => (p.id === productId ? { ...p, [field]: value } : p))
     )
@@ -189,7 +131,8 @@ const ProductManagement = () => {
     }
   }
 
-  const handleSaveEdit = async (productId: number) => {
+  const handleSaveEdit = async (productId: number | undefined) => {
+    if (!productId) return
     try {
       const productToUpdate = products.find((p) => p.id === productId)
       if (productToUpdate) {
@@ -243,9 +186,9 @@ const ProductManagement = () => {
           <input
             type="number"
             placeholder="จำนวนสต็อก"
-            value={newProduct.stock}
+            value={newProduct.quantity}
             onChange={(e) =>
-              setNewProduct({ ...newProduct, stock: e.target.value })
+              setNewProduct({ ...newProduct, quantity: e.target.value })
             }
             className="px-3 py-2 border rounded-lg"
           />
@@ -278,7 +221,7 @@ const ProductManagement = () => {
                     onClick={() => {
                       setImagePreview("")
                       setImageFile(null)
-                      setNewProduct({ ...newProduct, image: "" })
+                      setNewProduct({ ...newProduct })
                     }}
                     className="text-red-500 hover:text-red-700 text-sm">
                     ลบรูป
@@ -305,7 +248,7 @@ const ProductManagement = () => {
             !newProduct.name ||
             !newProduct.category ||
             !newProduct.price ||
-            !newProduct.stock ||
+            !newProduct.quantity ||
             !imageFile ||
             !newProduct.detail
           }>
@@ -339,7 +282,7 @@ const ProductManagement = () => {
                   <tr
                     key={product.id}
                     className={`border-b ${
-                      (product.stock || 0) < 10 ? "bg-red-50" : ""
+                      (product.quantity || 0) < 10 ? "bg-red-50" : ""
                     }`}>
                     <td className="py-2">
                       {editingProduct === product.id ? (
@@ -349,7 +292,7 @@ const ProductManagement = () => {
                             accept="image/*"
                             onChange={(e) => {
                               const file = e.target.files?.[0]
-                              if (file) {
+                              if (file && product.id) {
                                 handleEditImageUpload(file, product.id)
                               }
                             }}
@@ -365,7 +308,7 @@ const ProductManagement = () => {
                         </div>
                       ) : product.image ? (
                         <img
-                          src={product.image}
+                          src={product.image.public_url}
                           alt={product.name}
                           className="w-12 h-12 object-cover rounded border"
                         />
@@ -435,11 +378,11 @@ const ProductManagement = () => {
                       {editingProduct === product.id ? (
                         <input
                           type="number"
-                          value={product.stock}
+                          value={product.quantity}
                           onChange={(e) =>
                             handleUpdateProduct(
                               product.id,
-                              "stock",
+                              "quantity",
                               parseInt(e.target.value)
                             )
                           }
@@ -448,9 +391,11 @@ const ProductManagement = () => {
                       ) : (
                         <span
                           className={
-                            product.stock || 0 ? "text-red-600 font-bold" : ""
+                            product.quantity || 0
+                              ? "text-red-600 font-bold"
+                              : ""
                           }>
-                          {product.stock || 0} ชิ้น
+                          {product.quantity || 0} ชิ้น
                         </span>
                       )}
                     </td>
@@ -492,7 +437,9 @@ const ProductManagement = () => {
                         ) : (
                           <>
                             <button
-                              onClick={() => setEditingProduct(product.id)}
+                              onClick={() =>
+                                setEditingProduct(product.id as number)
+                              }
                               className="bg-blue-500 text-white px-2 py-1 rounded text-sm">
                               แก้ไข
                             </button>
@@ -517,26 +464,26 @@ const ProductManagement = () => {
         </div>
       </div>
 
-      {/* Low stock alert */}
+      {/* Low quantity alert */}
       <div className="bg-red-50 border border-red-200 rounded-lg p-4">
         <h3 className="text-lg font-semibold text-red-800 mb-2">
           {"สินค้าที่เหลือน้อย (< 10 ชิ้น)"}
         </h3>
         <div className="space-y-2">
           {products
-            .filter((p) => (p.stock || 0) < 10)
+            .filter((p) => (p.quantity || 0) < 10)
             .map((product) => (
               <div
                 key={product.id}
                 className="flex justify-between items-center">
                 <span className="text-red-700">{product.name}</span>
                 <span className="font-bold text-red-800">
-                  {product.stock || 0} ชิ้น
+                  {product.quantity || 0} ชิ้น
                 </span>
               </div>
             ))}
         </div>
-        {products.filter((p) => (p.stock || 0) < 10).length === 0 && (
+        {products.filter((p) => (p.quantity || 0) < 10).length === 0 && (
           <p className="text-gray-600">ไม่มีสินค้าเหลือน้อย</p>
         )}
       </div>
@@ -552,14 +499,14 @@ const ProductManagement = () => {
           <p className="text-2xl font-bold text-green-600">
             ฿
             {products
-              .reduce((total, p) => total + p.price * (p.stock || 0), 0)
+              .reduce((total, p) => total + p.price * (p.quantity || 0), 0)
               .toLocaleString()}
           </p>
         </div>
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <h4 className="font-semibold text-yellow-800">สินค้าเหลือน้อย</h4>
           <p className="text-2xl font-bold text-yellow-600">
-            {products.filter((p) => (p.stock || 0) < 10).length}
+            {products.filter((p) => (p.quantity || 0) < 10).length}
           </p>
         </div>
       </div>

@@ -3,10 +3,11 @@ package routes
 import (
 	"fmt"
 
-	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
 	"Bakery_Pos/db"
 	"Bakery_Pos/models"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -25,7 +26,7 @@ func GetAllOrders(c *fiber.Ctx) error {
 	}
 
 	var orders []models.Order
-	if err := db.DB.Preload("Items").Where("user_id = ?", userID).Find(&orders).Error; err != nil {
+	if err := db.DB.Preload("items").Where("user_id = ?", userID).Find(&orders).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch orders"})
 	}
 
@@ -54,7 +55,7 @@ func GetOrderByID(c *fiber.Ctx) error {
 
 	orderID := c.Params("order_id")
 	var order models.Order
-	if err := db.DB.Preload("Items").Where("id = ? AND user_id = ?", orderID, userID).First(&order).Error; err != nil {
+	if err := db.DB.Preload("items").Where("id = ? AND user_id = ?", orderID, userID).First(&order).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Order not found"})
 		}

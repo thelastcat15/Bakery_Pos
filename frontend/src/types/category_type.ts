@@ -1,3 +1,4 @@
+// not-response
 export interface Category {
   children: React.ReactNode
   active?: boolean

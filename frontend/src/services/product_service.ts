@@ -4,10 +4,20 @@ const BASE_PRODUCT = "/products"
 
 export const createProduct = async (newProduct: Product): Promise<Product> => {
   try {
-    const response = await api.post<Product>(`${BASE_PRODUCT}`)
+    const response = await api.post<Product>(`${BASE_PRODUCT}`, newProduct)
     return response.data
   } catch (error) {
     console.error("Create product error:", error)
+    throw error
+  }
+}
+
+export const getAllProducts = async (): Promise<Product[]> => {
+  try {
+    const response = await api.get<Product[]>(`${BASE_PRODUCT}`)
+    return response.data
+  } catch (error) {
+    console.error("Get all product error:", error)
     throw error
   }
 }
@@ -31,12 +41,46 @@ export const deleteProduct = async (productId: number) => {
   }
 }
 
-export const uploadImageProduct = async (productId: number) => {
+export const uploadImageProduct = async (productId: number, file: File) => {
   try {
-    const response = await api.post(`${BASE_PRODUCT}/${productId}/images`)
-    return response.data
+    const response1 = await api.post(`${BASE_PRODUCT}/${productId}/images`, {
+      images: [
+        {
+          order: 1,
+        },
+      ],
+    })
+
+    const response2 = await uploadImage(file, response1.data[0].upload_url)
+    return response2
   } catch (error) {
     console.error("Upload image of product error:", error)
     throw error
+  }
+}
+
+export const uploadImage = async (file: File, uploadUrl: string) => {
+  try {
+    // axios จะส่ง binary โดยตรง
+    const response = await api.put(uploadUrl, file, {
+      headers: {
+        "Content-Type": file.type, // เช่น image/png, image/jpeg
+      },
+    })
+
+    console.log("Upload success:", response.status)
+  } catch (error) {
+    console.error("Upload failed:", error)
+  }
+}
+
+export const getImagesById = async (productId: number) => {
+  try {
+    const response = await api.get(`${BASE_PRODUCT}/${productId}/images`)
+
+    console.log("Upload success:", response.status)
+    return response.data.images[0].public_url
+  } catch (error) {
+    console.error("Upload failed:", error)
   }
 }

@@ -5,11 +5,12 @@ import (
 	"Bakery_Pos/models"
 	"Bakery_Pos/module"
 	"errors"
+	"strings"
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
-	"strings"
-	"time"
 
 	"github.com/google/uuid"
 )
@@ -78,8 +79,9 @@ func RegisterHandler(c *fiber.Ctx) error {
 		Value:    "Bearer " + tokenString,
 		Expires:  EXP,
 		HTTPOnly: true,
-		Secure:   true,
+		Secure:   false,
 		SameSite: "None",
+		Path:     "/",
 	})
 
 	// Return response
@@ -112,7 +114,7 @@ func LoginHandler(c *fiber.Ctx) error {
 	}
 
 	var user models.User
-	if err := db.DB.Where("user_id = ?", req.Username).First(&user).Error; err != nil {
+	if err := db.DB.Where("username = ?", req.Username).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 				"error": "Invalid username or password",
@@ -142,8 +144,9 @@ func LoginHandler(c *fiber.Ctx) error {
 		Value:    "Bearer " + tokenString,
 		Expires:  EXP,
 		HTTPOnly: true,
-		Secure:   true,
+		Secure:   false,
 		SameSite: "None",
+		Path:     "/",
 	})
 
 	resp := models.UserResponse{
@@ -173,7 +176,7 @@ func UpdateSetting(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid user ID",
-    })
+		})
 	}
 
 	var input models.FormSetting
@@ -231,7 +234,6 @@ func UpdateSetting(c *fiber.Ctx) error {
 		})
 	}
 
-	
 	res := models.MessageResponse{
 		Message: "User updated successfully",
 	}

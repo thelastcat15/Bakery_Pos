@@ -50,7 +50,7 @@ export const UseCart = () => {
       if (existingItem) {
         return prev.map((item) =>
           item.id === product.id
-            ? { ...item, quantity: item.quantity + quantity }
+            ? { ...item, quantity: item.quantity!! + quantity }
             : item
         )
       } else {
@@ -82,7 +82,7 @@ export const UseCart = () => {
   const increaseQuantity = useCallback((productId: number) => {
     setCartItems((prev) =>
       prev.map((item) =>
-        item.id == productId ? { ...item, quantity: item.quantity + 1 } : item
+        item.id == productId ? { ...item, quantity: item.quantity!! + 1 } : item
       )
     )
   }, [])
@@ -92,10 +92,10 @@ export const UseCart = () => {
       prev
         .map((item) =>
           item.id === productId
-            ? { ...item, quantity: Math.max(0, item.quantity - 1) }
+            ? { ...item, quantity: Math.max(0, item.quantity!! - 1) }
             : item
         )
-        .filter((item) => item.quantity > 0)
+        .filter((item) => item.quantity!! > 0)
     )
   }, [])
 
@@ -104,20 +104,20 @@ export const UseCart = () => {
   }, [])
 
   const getTotalItems = useCallback(() => {
-    return cartItems.reduce((total, item) => total + item.quantity, 0)
+    return cartItems.reduce((total, item) => total + item.quantity!!, 0)
   }, [cartItems])
 
   // Updated to use promotional pricing
   const getTotalPrice = useCallback(() => {
     return cartItems.reduce((total, item) => {
       const discountedPrice = getDiscountedPrice(item)
-      return total + discountedPrice * item.quantity
+      return total + discountedPrice * item.quantity!!
     }, 0)
   }, [cartItems, getDiscountedPrice])
 
   const getOriginalTotalPrice = useCallback(() => {
     return cartItems.reduce(
-      (total, item) => total + item.price * item.quantity,
+      (total, item) => total + item.price * item.quantity!!,
       0
     )
   }, [cartItems])

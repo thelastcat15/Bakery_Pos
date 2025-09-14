@@ -1,10 +1,11 @@
 package middleware
 
 import (
-	"github.com/gofiber/fiber/v2"
-	"strings"
-	"github.com/golang-jwt/jwt/v5"
 	"os"
+	"strings"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 func Auth(c *fiber.Ctx) error {

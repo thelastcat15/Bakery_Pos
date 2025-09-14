@@ -5,40 +5,40 @@ import (
 )
 
 type MessageResponse struct {
-	Message 	string     `json:"message"`
+	Message string `json:"message"`
 }
 
 type UserResponse struct {
 	Message string `json:"message"`
 	User    struct {
-		UserID   uuid.UUID   `json:"userid"`
-		Role     string 		 `json:"role"`
-		Username string 		 `json:"username"`
-		Exp      int64  		 `json:"exp"`
+		UserID   uuid.UUID `json:"userid"`
+		Role     string    `json:"role"`
+		Username string    `json:"username"`
+		Exp      int64     `json:"exp"`
 	} `json:"user"`
 }
 
 type ProductResponse struct {
-	ID 				  uint         			`json:"id"`
-  Name        string       				`json:"name"`
-  Description string       				`json:"description"`
-  Tag         string       				`json:"category"`
-  Price       float64      				`json:"price"`
-  Stock       int          				`json:"quantity"`
-  IsActive    bool         				`json:"is_active"`
-  Images      []ImageResponse     `json:"images,omitempty"`
+	ID          uint            `json:"id"`
+	Name        string          `json:"name"`
+	Description string          `json:"detail"`
+	Tag         string          `json:"category"`
+	Price       float64         `json:"price"`
+	Stock       int             `json:"quantity"`
+	IsActive    bool            `json:"is_active"`
+	Images      []ImageResponse `json:"images,omitempty"`
 }
 
 type ImagesArrayResponse struct {
-  Images []ImageResponse `json:"images"`
+	Images []ImageResponse `json:"images"`
 }
 
 type ImageResponse struct {
-  ID        uint	 `json:"id"`
-  FileName  string `json:"file_name"`
+	ID        uint    `json:"id"`
+	FileName  string  `json:"file_name"`
 	PublicURL *string `json:"public_url,omitempty"`
-  UploadURL *string `json:"upload_url,omitempty"`
-  Order     int    `json:"order"`
+	UploadURL *string `json:"upload_url,omitempty"`
+	Order     int     `json:"order"`
 }
 
 type CartItemResponse struct {

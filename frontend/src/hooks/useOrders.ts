@@ -1,4 +1,5 @@
-import { CustomerInfo, Order, OrderItem } from "@/types/order_type"
+import { CustomerInfo, Order } from "@/types/order_type"
+import { Product } from "@/types/product_type"
 import { useCallback, useEffect, useState } from "react"
 
 const ORDER_STORAGE_KEY = "customer_orders"
@@ -22,6 +23,8 @@ const saveOrderToStorage = (orders: Order[]) => {
 const loadOrdersFromStorage = (): Order[] => {
   try {
     // In real app, this would fetch from backend API
+
+    // mock
     return [
       {
         id: "ORD001",
@@ -140,13 +143,16 @@ export const useOrders = () => {
   }, [orders, isLoaded])
 
   const createOrder = useCallback(
-    (items: OrderItem[], customerInfo: CustomerInfo, paymentSlip: File) => {
+    (items: Product[], customerInfo: CustomerInfo, paymentSlip: File) => {
       const newOrder: Order = {
         id: `ORD${Date.now().toString().slice(-6)}`,
         date: new Date().toISOString().split("T")[0],
         items,
         customerInfo,
-        total: items.reduce((sum, item) => sum + item.price * item.quantity, 0),
+        total: items.reduce(
+          (sum, item) => sum + item.price * item.quantity!!,
+          0
+        ),
         status: "pending",
         paymentSlip,
         createdAt: new Date(),

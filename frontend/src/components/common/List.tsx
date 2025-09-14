@@ -77,10 +77,10 @@ export const CartList = ({
           <div key={item.id}>
             <CardCart
               product={item}
-              quantity={item.quantity}
-              onIncrease={() => onIncrease(item.id)}
-              onDecrease={() => onDecrease(item.id)}
-              onRemove={() => onRemove(item.id)}
+              quantity={item.quantity!!}
+              onIncrease={() => onIncrease(item.id!!)}
+              onDecrease={() => onDecrease(item.id!!)}
+              onRemove={() => onRemove(item.id!!)}
             />
             <hr className="text-gray-200 mt-2 mb-4" />
           </div>
