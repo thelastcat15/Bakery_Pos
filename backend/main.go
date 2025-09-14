@@ -2,18 +2,19 @@ package main
 
 import (
 	"log"
-	
-	"Bakery_Pos/middleware"
+
 	"Bakery_Pos/db"
+	"Bakery_Pos/middleware"
 	"Bakery_Pos/routes"
 	"Bakery_Pos/routes_admin"
-	"github.com/joho/godotenv"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/joho/godotenv"
 
-	
 	_ "Bakery_Pos/docs"
-  "github.com/gofiber/swagger"
+
+	"github.com/gofiber/swagger"
 )
 
 // @title Bakery POS API
@@ -40,7 +41,7 @@ func main() {
 
 	user := api.Group("/user")
 	user.Post("/login", routes.LoginHandler)
-	user.Get("/register", routes.RegisterHandler)
+	user.Post("/register", routes.RegisterHandler)
 	user.Get("/setting", routes.UpdateSetting)
 
 	product := api.Group("/products")
@@ -71,7 +72,7 @@ func main() {
 	// admin.Post("/edit-stock", routes.EditStock)
 	// admin.Get("/dashboard", routes.ViewDashboard)
 	// admin.Get("/promotion", routes.ViewDashboard)
-	
-  app.Get("/*", swagger.HandlerDefault)
-	app.Listen(":3000")
+
+	app.Get("/*", swagger.HandlerDefault)
+	app.Listen(":5000")
 }

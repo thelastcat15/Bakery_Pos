@@ -1,5 +1,6 @@
 "use client"
 
+import { createProduct } from "@/services/product_service"
 import { Product } from "@/types/product_type"
 import { useState } from "react"
 
@@ -105,23 +106,29 @@ const ProductManagement = () => {
     }
   }
 
-  const createProduct = async (productData: Omit<Product, "id">) => {
-    // ใ upload รูปก่อน แล้วได้ URL กลับมา
-    // if (imageFile) {
-    //   const formData = new FormData()
-    //   formData.append('image', imageFile)
-    //   const uploadResponse = await fetch('/api/upload', { method: 'POST', body: formData })
-    //   const { imageUrl } = await uploadResponse.json()
-    //   productData.image = imageUrl
-    // }
+  const handleCreateProduct = async (productData: Omit<Product, "id">) => {
+    //  upload รูปก่อน แล้วได้ URL กลับมา
+    try {
+      // สร้างสินค้า
+      const response = await createProduct(productData)
 
-    // จากนั้นถึงสร้างสินค้า
-    // const response = await fetch('/api/products', { method: 'POST', body: JSON.stringify(productData) })
-    // const newProduct = await response.json()
+      if (imageFile) {
+        const formData = new FormData()
+        formData.append("image", imageFile)
+        const uploadResponse = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        })
+        const { imageUrl } = await uploadResponse.json()
+        productData.image = imageUrl
+      }
 
-    // สำหรับ demo ใช้ temporary ID
-    const tempId = Math.max(...products.map((p) => p.id), 0) + 1
-    return { ...productData, id: tempId }
+      return { ...productData, id: response.id }
+    } catch (error) {
+      console.error("Cannot create product")
+    }
+
+    return {}
   }
 
   const handleAddProduct = async () => {

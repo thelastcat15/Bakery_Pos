@@ -1,5 +1,7 @@
 import { useState } from "react"
 import { PrimaryButton } from "@/components/common/Button"
+import { login } from "@/services/user_service"
+import { register } from "@/services/user_service"
 
 export const RegisterForm = () => {
   const [formData, setFormData] = useState({
@@ -33,10 +35,13 @@ export const RegisterForm = () => {
       return
     }
 
+    const response = register(formData.username, formData.password1)
+
     console.log("Form submitted:", {
       username: formData.username,
       password: formData.password1,
     })
+    console.log(response)
   }
 
   return (
@@ -121,10 +126,13 @@ export const LoginForm = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
+    const response = login(formData.username, formData.password)
+
     console.log("Form submitted:", {
       username: formData.username,
       password: formData.password,
     })
+    console.log(response)
   }
 
   return (
