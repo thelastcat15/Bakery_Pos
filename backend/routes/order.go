@@ -91,13 +91,14 @@ func GenerateOrderSlipURL(c *fiber.Ctx) error {
 	fileName := fmt.Sprintf("order-%d-slip.png", order.ID)
 	filePath := fmt.Sprintf("orders/%d/%s", order.ID, fileName)
 
-	signedUpload, err := db.Storage.CreateSignedUploadUrl("order-slips", filePath)
+	signedURL, publicURL, err := db.Storage.GenerateUploadURL("order-slips", filePath)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 
 	resp := models.UploadOrderSlipResponse{
-		UploadURL: signedUpload.Url,
+		UploadURL: signedURL,
+		PublicURL: publicURL,
 	}
 
 	return c.Status(fiber.StatusOK).JSON(resp)

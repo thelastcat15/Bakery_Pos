@@ -108,11 +108,11 @@ func GetImagesProduct(c *fiber.Ctx) error {
 	for i := range images {
 		img := &images[i]
 		if img.PublicURL == nil || *img.PublicURL == "" {
-			result := db.Storage.GetPublicUrl("test", img.FileName) // use actual file name
-			if result.SignedURL != "" {
-				img.PublicURL = &result.SignedURL
+			SignedURL, PublicURL, _ := db.Storage.GenerateUploadURL("test", img.FilePath)
+			if SignedURL != "" {
+				img.PublicURL = &SignedURL
 
-				if err := db.DB.Model(img).Update("public_url", img.PublicURL).Error; err != nil {
+				if err := db.DB.Model(img).Update("public_url", PublicURL).Error; err != nil {
 					fmt.Println("Failed to update public URL for image", img.ID, ":", err)
 				}
 			}
