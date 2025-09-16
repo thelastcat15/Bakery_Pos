@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm/clause"
 )
 
 // CreateProduct godoc
@@ -145,22 +146,18 @@ func UploadImagesProduct(c *fiber.Ctx) error {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 		}
 
-		var image models.Image
-		err = db.DB.Where("product_id = ? AND `order` = ?", product.ID, order).First(&image).Error
-		if err == nil {
-			image.FilePath = filePath
-			image.UploadURL = &signedURL
-			db.DB.Save(&image)
-		} else {
-			image = models.Image{
-				ProductID: product.ID,
-				FilePath:  filePath,
-				UploadURL: &signedURL,
-				PublicURL: &publicURL,
-				Order:     order,
-			}
-			db.DB.Create(&image)
+		image := models.Image{
+			ProductID: product.ID,
+			FilePath:  filePath,
+			UploadURL: &signedURL,
+			PublicURL: &publicURL,
+			Order:     order,
 		}
+
+		db.DB.Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "product_id"}, {Name: "order"}},
+			DoUpdates: clause.AssignmentColumns([]string{"file_path", "upload_url", "public_url"}),
+		}).Create(&image)
 
 		results = append(results, image.ToResponse(true))
 	}

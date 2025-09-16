@@ -12,7 +12,7 @@ func (c *Client) GetPublicURL(bucket, objectPath string) string {
 func (c *Client) Download(bucket, path string) ([]byte, error) {
 	urlPath := fmt.Sprintf("/object/%s/%s", bucket, path)
 
-	resp, err := c.DoRequest("GET", urlPath, nil)
+	resp, err := c.DoRequest("GET", urlPath, struct{}{})
 	if err != nil {
 		return nil, err
 	}

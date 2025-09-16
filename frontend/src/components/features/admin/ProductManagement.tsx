@@ -60,8 +60,7 @@ const ProductManagement = () => {
       // upload รูป
       if (imageFile) {
         const uploadResponse = await uploadImageProduct(response.id, imageFile)
-        const imageUrl = await getImagesById(response.id)
-        productData.image = imageUrl
+        productData.image = uploadResponse.public_url
       }
 
       return { ...productData, id: response.id }
@@ -73,6 +72,7 @@ const ProductManagement = () => {
   }
 
   const handleAddProduct = async () => {
+    console.log("Adding product:", newProduct)
     if (
       newProduct.name &&
       newProduct.category &&

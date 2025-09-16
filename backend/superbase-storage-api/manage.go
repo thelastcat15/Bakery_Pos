@@ -8,7 +8,7 @@ import (
 func (c *Client) RemoveFile(bucket, path string) error {
 	urlPath := fmt.Sprintf("/object/%s/%s", bucket, path)
 
-	resp, err := c.DoRequest("DELETE", urlPath, nil)
+	resp, err := c.DoRequest("DELETE", urlPath, struct{}{})
 	if err != nil {
 		return err
 	}

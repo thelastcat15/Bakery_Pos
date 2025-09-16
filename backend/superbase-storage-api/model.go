@@ -7,6 +7,11 @@ type Client struct {
 	Headers   map[string]string
 }
 
+type SignUploadFile struct {
+	URL   string `json:"url"`
+	Token string `json:"token"`
+}
+
 type BucketInfo struct {
 	Name      string `json:"name"`
 	ID        string `json:"id"`
