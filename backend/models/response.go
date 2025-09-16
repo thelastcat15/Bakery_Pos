@@ -64,5 +64,6 @@ type OrderResponse struct {
 }
 
 type UploadOrderSlipResponse struct {
+	PublicURL string `json:"public_url"`
 	UploadURL string `json:"upload_url"`
 }

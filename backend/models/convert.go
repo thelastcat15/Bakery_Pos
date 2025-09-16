@@ -10,7 +10,6 @@ func (img *Image) ToResponse(isAdmin bool) ImageResponse {
 	}
 
 	if isAdmin {
-		resp.FileName = img.FileName
 		resp.UploadURL = img.UploadURL
 	}
 	return resp

@@ -1,10 +1,10 @@
 package routes_admin
 
 import (
-	"fmt"
-	"strconv"
 	"Bakery_Pos/db"
 	"Bakery_Pos/models"
+	"fmt"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -19,30 +19,30 @@ import (
 // @Success 201 {object} models.ProductResponse
 // @Router /products [post]
 func CreateProduct(c *fiber.Ctx) error {
-  var req models.BodyProductRequest
-  if err := c.BodyParser(&req); err != nil {
-    return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-      "error": "Invalid request payload",
-    })
-  }
+	var req models.BodyProductRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid request payload",
+		})
+	}
 
-  // Create product
-  product := models.Product{
-    Name:        req.Name,
-    Description: req.Description,
-    Tag:         req.Tag,
-    Price:       req.Price,
-    Stock:       req.Stock,
-    IsActive:    req.IsActive,
-  }
+	// Create product
+	product := models.Product{
+		Name:        req.Name,
+		Description: req.Description,
+		Tag:         req.Tag,
+		Price:       req.Price,
+		Stock:       req.Stock,
+		IsActive:    req.IsActive,
+	}
 
-  if err := db.DB.Create(&product).Error; err != nil {
-    return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-      "error": "Failed to create product",
-    })
-  }
+	if err := db.DB.Create(&product).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to create product",
+		})
+	}
 
-  return c.Status(fiber.StatusOK).Status(fiber.StatusCreated).JSON(product.ToResponse(true))
+	return c.Status(fiber.StatusOK).Status(fiber.StatusCreated).JSON(product.ToResponse(true))
 }
 
 // UpdateProduct godoc
@@ -56,36 +56,36 @@ func CreateProduct(c *fiber.Ctx) error {
 // @Success 200 {object} models.ProductResponse
 // @Router /products/{id} [put]
 func UpdateProduct(c *fiber.Ctx) error {
-  id := c.Params("id")
+	id := c.Params("id")
 
-  var product models.Product
-  if err := db.DB.Preload("Images").First(&product, id).Error; err != nil {
-    return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-      "error": "Product not found",
-    })
-  }
+	var product models.Product
+	if err := db.DB.Preload("Images").First(&product, id).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "Product not found",
+		})
+	}
 
-  var body models.BodyProductRequest
-  if err := c.BodyParser(&body); err != nil {
-    return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-      "error": "Invalid request payload",
-    })
-  }
+	var body models.BodyProductRequest
+	if err := c.BodyParser(&body); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid request payload",
+		})
+	}
 
-  product.Name = body.Name
-  product.Description = body.Description
-  product.Tag = body.Tag
-  product.Price = body.Price
-  product.Stock = body.Stock
-  product.IsActive = body.IsActive
+	product.Name = body.Name
+	product.Description = body.Description
+	product.Tag = body.Tag
+	product.Price = body.Price
+	product.Stock = body.Stock
+	product.IsActive = body.IsActive
 
-  if err := db.DB.Save(&product).Error; err != nil {
-    return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-      "error": "Failed to update product",
-    })
-  }
+	if err := db.DB.Save(&product).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to update product",
+		})
+	}
 
-  return c.Status(fiber.StatusOK).JSON(product.ToResponse(true))
+	return c.Status(fiber.StatusOK).JSON(product.ToResponse(true))
 }
 
 // DeleteProduct godoc
@@ -140,7 +140,7 @@ func UploadImagesProduct(c *fiber.Ctx) error {
 		fileName := fmt.Sprintf("%d-%d.png", product.ID, order)
 		filePath := fmt.Sprintf("products/%d/%s", product.ID, fileName)
 
-		signedUpload, err := db.Storage.CreateSignedUploadUrl("product-images", filePath)
+		signedURL, publicURL, err := db.Storage.GenerateUploadURL("product-images", filePath)
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 		}
@@ -148,16 +148,15 @@ func UploadImagesProduct(c *fiber.Ctx) error {
 		var image models.Image
 		err = db.DB.Where("product_id = ? AND `order` = ?", product.ID, order).First(&image).Error
 		if err == nil {
-			image.FileName = fileName
 			image.FilePath = filePath
-			image.UploadURL = &signedUpload.Url
+			image.UploadURL = &signedURL
 			db.DB.Save(&image)
 		} else {
 			image = models.Image{
 				ProductID: product.ID,
-				FileName:  fileName,
 				FilePath:  filePath,
-				UploadURL: &signedUpload.Url,
+				UploadURL: &signedURL,
+				PublicURL: &publicURL,
 				Order:     order,
 			}
 			db.DB.Create(&image)
@@ -212,17 +211,12 @@ func DeleteImagesProduct(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "No images found"})
 	}
 
-	// collect file paths
-	var filePaths []string
 	for _, img := range images {
-		filePaths = append(filePaths, img.FilePath)
+		if err := db.Storage.RemoveFile("product-images", img.FilePath); err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+		}
 	}
 
-	if _, err := db.Storage.RemoveFile("product-images", filePaths); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
-	}
-
-	// delete from db
 	if err := db.DB.Where("product_id = ? AND `order` IN ?", productID, orders).Delete(&models.Image{}).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
@@ -231,4 +225,3 @@ func DeleteImagesProduct(c *fiber.Ctx) error {
 		Message: "Images deleted successfully",
 	})
 }
-

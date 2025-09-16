@@ -4,24 +4,25 @@ import (
 	"log"
 	"os"
 
-	storage_go "github.com/supabase-community/storage-go"
+	storageapi "Bakery_Pos/superbase-storage-api"
 )
 
-var Storage *storage_go.Client
+var Storage *storageapi.Client
 
 func Connect_Storage() {
-	storageUrl := os.Getenv("STORAGE_URL")
-	if storageUrl == "" {
+	projectID := os.Getenv("PROJECT_ID")
+	if projectID == "" {
 		log.Fatal("STORAGE_ACCESS is not set")
 	}
-	accessKey := os.Getenv("STORAGE_ACCESS")
-	if accessKey == "" {
+	anonKey := os.Getenv("ANON_KEY")
+	if anonKey == "" {
+		log.Fatal("STORAGE_SECRET is not set")
+	}
+	secretKey := os.Getenv("SECRET_KEY")
+	if secretKey == "" {
 		log.Fatal("STORAGE_SECRET is not set")
 	}
 
-	Storage = storage_go.NewClient(storageUrl, "Bearer "+accessKey, nil)
-	Storage.CreateBucket("product-images", storage_go.BucketOptions{
-		Public: true,
-	})
-	log.Println("✅ Connected to Supabase Storage")
+	Storage = storageapi.NewClient(projectID, anonKey, secretKey)
+	Storage.CreateBucket("product-images", true)
 }
