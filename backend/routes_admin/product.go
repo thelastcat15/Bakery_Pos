@@ -211,14 +211,12 @@ func DeleteImagesProduct(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "No images found"})
 	}
 
-	// collect file paths
 	for _, img := range images {
 		if err := db.Storage.RemoveFile("product-images", img.FilePath); err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 		}
 	}
 
-	// delete from db
 	if err := db.DB.Where("product_id = ? AND `order` IN ?", productID, orders).Delete(&models.Image{}).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
