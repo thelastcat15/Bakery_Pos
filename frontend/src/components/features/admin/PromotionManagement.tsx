@@ -1,67 +1,10 @@
 "use client"
 import { usePromotions } from "@/hooks/usePromotions"
+import { getAllProducts } from "@/services/product_service"
+import { Category } from "@/types/category_type"
+import { Product } from "@/types/product_type"
 import { Promotion } from "@/types/promotion_types"
-import { useState } from "react"
-
-const categories = ["drink", "cake", "cookie", "donut"]
-
-// Mock data
-const mockProducts = [
-  {
-    id: 1,
-    name: "กาแฟ Americano",
-    category: "drink",
-    price: 120,
-    stock: 15,
-    image: "",
-    detail: "กาแฟดำรสเข้ม",
-  },
-  {
-    id: 2,
-    name: "ชาเขียว",
-    category: "drink",
-    price: 80,
-    stock: 8,
-    image: "",
-    detail: "ชาเขียวสดชื่น",
-  },
-  {
-    id: 3,
-    name: "คัพเค้ก",
-    category: "cake",
-    price: 125,
-    stock: 5,
-    image: "",
-    detail: "คัพเค้กหวานนุ่ม",
-  },
-  {
-    id: 4,
-    name: "เค้กช็อกโกแลต",
-    category: "cake",
-    price: 180,
-    stock: 12,
-    image: "",
-    detail: "เค้กช็อกโกแลตเข้มข้น",
-  },
-  {
-    id: 5,
-    name: "คุกกี้",
-    category: "cookie",
-    price: 100,
-    stock: 20,
-    image: "",
-    detail: "คุกกี้กรอบอร่อย",
-  },
-  {
-    id: 6,
-    name: "โดนัท",
-    category: "donut",
-    price: 65,
-    stock: 3,
-    image: "",
-    detail: "โดนัทนุ่มฟู",
-  },
-]
+import { useEffect, useState } from "react"
 
 // ฟอร์มใช้ type แยกเพื่อให้ discount เป็น string ได้
 type PromotionForm = Omit<
@@ -82,10 +25,23 @@ const PromotionManagement = () => {
     announcement: "",
   })
 
+  const [products, setProducts] = useState<Product[]>([])
+  const [categories, setCategories] = useState<string[]>([])
+
+  const handleListProduct = async () => {
+    const data = await getAllProducts()
+    setProducts(data)
+    const uniqCategories = Array.from(new Set(data.map((p) => p.category)))
+
+    setCategories(uniqCategories)
+  }
+
+  useEffect(() => {
+    handleListProduct()
+  }, [])
+
   const { promotions, createPromotion, deletePromotion, getDiscountedPrice } =
     usePromotions()
-
-  const [products] = useState(mockProducts)
 
   return (
     <div className="space-y-6">
