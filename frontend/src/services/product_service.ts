@@ -14,7 +14,7 @@ export const createProduct = async (newProduct: Product): Promise<Product> => {
 
 export const getAllProducts = async (): Promise<Product[]> => {
   try {
-    const response = await api.get<Product[]>(`${BASE_PRODUCT}`)
+    const response = await api.get(`${BASE_PRODUCT}`)
     return response.data
   } catch (error) {
     console.error("Get all product error:", error)
@@ -63,7 +63,7 @@ export const uploadImage = async (file: File, uploadUrl: string) => {
   try {
     const response = await api.put(uploadUrl, file, {
       headers: {
-        "Content-Type": file.type, // เช่น image/png, image/jpeg
+        "Content-Type": file.type,
       },
       withCredentials: false,
     })

@@ -84,14 +84,8 @@ func RegisterHandler(c *fiber.Ctx) error {
 		Path:     "/",
 	})
 
-	// Return response
-	resp := models.UserResponse{
-		Message: "Register successful",
-	}
-	resp.User.UserID = user.ID
-	resp.User.Role = user.Role
-	resp.User.Username = user.Username
-	resp.User.Exp = EXP.Unix()
+	resp := user.ToResponse()
+	resp.Exp = &[]int64{EXP.Unix()}[0]
 
 	return c.Status(fiber.StatusCreated).JSON(resp)
 }
@@ -149,13 +143,8 @@ func LoginHandler(c *fiber.Ctx) error {
 		Path:     "/",
 	})
 
-	resp := models.UserResponse{
-		Message: "Login successful",
-	}
-	resp.User.UserID = user.ID
-	resp.User.Role = user.Role
-	resp.User.Username = user.Username
-	resp.User.Exp = EXP.Unix()
+	resp := user.ToResponse()
+	resp.Exp = &[]int64{EXP.Unix()}[0]
 
 	return c.Status(fiber.StatusOK).JSON(resp)
 }
@@ -206,7 +195,7 @@ func UpdateSetting(c *fiber.Ctx) error {
 				"error": "Phone number must be 10 digits",
 			})
 		}
-		user.PhoneNumber = phone
+		user.PhoneNumber = &phone
 		updated = true
 	}
 
@@ -217,7 +206,7 @@ func UpdateSetting(c *fiber.Ctx) error {
 				"error": "Place cannot be empty",
 			})
 		}
-		user.Place = place
+		user.Place = &place
 		updated = true
 	}
 

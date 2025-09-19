@@ -19,23 +19,16 @@ import (
 // @Router /products [get]
 func GetProducts(c *fiber.Ctx) error {
 	var products []models.Product
-	if err := db.DB.Preload("images").Find(&products).Error; err != nil {
+	// Change "images" to "Images" to match the struct field name
+	if err := db.DB.Preload("Images").Find(&products).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to fetch products",
 		})
 	}
 
-	role, ok := c.Locals("role").(string)
-	var isAdmin bool
-	if ok && role == "Admin" {
-		isAdmin = true
-	} else {
-		isAdmin = false
-	}
-
 	responses := make([]models.ProductResponse, len(products))
 	for i := range products {
-		responses[i] = products[i].ToResponse(isAdmin)
+		responses[i] = products[i].ToResponse()
 	}
 
 	return c.Status(fiber.StatusOK).JSON(responses)
@@ -51,22 +44,15 @@ func GetProducts(c *fiber.Ctx) error {
 // @Success 200 {object} models.ProductResponse
 // @Router /products/{id} [get]
 func GetProductByID(c *fiber.Ctx) error {
-	role, ok := c.Locals("role").(string)
-	var isAdmin bool
-	if ok && role == "Admin" {
-		isAdmin = true
-	} else {
-		isAdmin = false
-	}
-
 	id := c.Params("id")
 	var product models.Product
-	if err := db.DB.Preload("images").First(&product, id).Error; err != nil {
+	// Change "images" to "Images" to match the struct field name
+	if err := db.DB.Preload("Images").First(&product, id).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"error": "Product not found",
 		})
 	}
-	return c.Status(fiber.StatusOK).JSON(product.ToResponse(isAdmin))
+	return c.Status(fiber.StatusOK).JSON(product.ToResponse())
 }
 
 // GetImagesProduct godoc
@@ -95,14 +81,6 @@ func GetImagesProduct(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	role, ok := c.Locals("role").(string)
-	var isAdmin bool
-	if ok && role == "Admin" {
-		isAdmin = true
-	} else {
-		isAdmin = false
-	}
-
 	responses := make([]models.ImageResponse, 0, len(images))
 
 	for i := range images {
@@ -118,7 +96,7 @@ func GetImagesProduct(c *fiber.Ctx) error {
 			}
 		}
 
-		responses = append(responses, img.ToResponse(isAdmin))
+		responses = append(responses, img.ToResponse())
 	}
 
 	return c.Status(fiber.StatusOK).JSON(models.ImagesArrayResponse{

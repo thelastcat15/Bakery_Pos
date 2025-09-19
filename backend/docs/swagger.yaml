@@ -149,24 +149,25 @@ definitions:
     type: object
   models.UploadOrderSlipResponse:
     properties:
+      public_url:
+        type: string
       upload_url:
         type: string
     type: object
   models.UserResponse:
     properties:
-      message:
+      exp:
+        type: integer
+      phone_number:
         type: string
-      user:
-        properties:
-          exp:
-            type: integer
-          role:
-            type: string
-          userid:
-            type: string
-          username:
-            type: string
-        type: object
+      place:
+        type: string
+      role:
+        type: string
+      userid:
+        type: string
+      username:
+        type: string
     type: object
 host: localhost:5000
 info:

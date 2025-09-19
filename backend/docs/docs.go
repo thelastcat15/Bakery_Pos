@@ -830,6 +830,9 @@ const docTemplate = `{
         "models.UploadOrderSlipResponse": {
             "type": "object",
             "properties": {
+                "public_url": {
+                    "type": "string"
+                },
                 "upload_url": {
                     "type": "string"
                 }
@@ -838,25 +841,23 @@ const docTemplate = `{
         "models.UserResponse": {
             "type": "object",
             "properties": {
-                "message": {
+                "exp": {
+                    "type": "integer"
+                },
+                "phone_number": {
                     "type": "string"
                 },
-                "user": {
-                    "type": "object",
-                    "properties": {
-                        "exp": {
-                            "type": "integer"
-                        },
-                        "role": {
-                            "type": "string"
-                        },
-                        "userid": {
-                            "type": "string"
-                        },
-                        "username": {
-                            "type": "string"
-                        }
-                    }
+                "place": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "userid": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
                 }
             }
         }

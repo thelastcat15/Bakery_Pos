@@ -1,7 +1,10 @@
 import { SuggestList } from "@/components/common/List"
-import { products } from "@/data/mock/product_mock"
+import { getAllProducts } from "@/services/product_service"
 
-const Suggest = () => {
+const Suggest = async () => {
+  const products = await getAllProducts()
+  console.log(products)
+
   return (
     <article className="mt-18 md:mt-24">
       <h2 className="font-bold text-3xl text-center">รายการแนะนำ</h2>

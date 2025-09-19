@@ -23,7 +23,6 @@ type Image struct {
 	ProductID uint
 	FilePath  string
 	PublicURL *string
-	UploadURL *string
 	Order     int
 }
 

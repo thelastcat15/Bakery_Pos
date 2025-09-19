@@ -7,16 +7,16 @@ import (
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
-	"gorm.io/gorm/clause"
 )
 
 // CreateProduct godoc
 // @Summary Create a new product
-// @Description Add a new product to the database
+// @Description Add a new product to the database. Optionally, use ?images_amount to create image rows and get upload URLs.
 // @Tags product
 // @Accept json
 // @Produce json
 // @Param request body models.BodyProductRequest true "Product data"
+// @Param images_amount query int false "Number of images to create and get upload URLs for"
 // @Success 201 {object} models.ProductResponse
 // @Router /products [post]
 func CreateProduct(c *fiber.Ctx) error {
@@ -43,7 +43,49 @@ func CreateProduct(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.Status(fiber.StatusOK).Status(fiber.StatusCreated).JSON(product.ToResponse(true))
+	// Handle images_amount query
+	imagesAmountStr := c.Query("images_amount", "0")
+	imagesAmount, err := strconv.Atoi(imagesAmountStr)
+	if err != nil || imagesAmount < 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid images_amount query parameter",
+		})
+	}
+
+	var images []models.Image
+	var imageResponses []models.ImageResponse
+
+	if imagesAmount > 0 {
+		for i := 1; i <= imagesAmount; i++ {
+			fileName := fmt.Sprintf("%d-%d.png", product.ID, i)
+			filePath := fmt.Sprintf("products/%d/%s", product.ID, fileName)
+			signedURL, publicURL, err := db.Storage.GenerateUploadURL("product-images", filePath)
+			if err != nil {
+				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+			}
+			image := models.Image{
+				ProductID: product.ID,
+				FilePath:  filePath,
+				PublicURL: &publicURL,
+				Order:     i,
+			}
+			if err := db.DB.Create(&image).Error; err != nil {
+				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+			}
+			imgResp := image.ToResponse()
+			imgResp.UploadURL = &signedURL
+			imageResponses = append(imageResponses, imgResp)
+			images = append(images, image)
+		}
+		product.Images = images
+	}
+
+	resp := product.ToResponse()
+	if imagesAmount > 0 {
+		resp.Images = imageResponses
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(resp)
 }
 
 // UpdateProduct godoc
@@ -86,7 +128,7 @@ func UpdateProduct(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.Status(fiber.StatusOK).JSON(product.ToResponse(true))
+	return c.Status(fiber.StatusOK).JSON(product.ToResponse())
 }
 
 // DeleteProduct godoc
@@ -107,13 +149,13 @@ func DeleteProduct(c *fiber.Ctx) error {
 }
 
 // UploadImagesProduct godoc
-// @Summary Upload multiple images for a product
-// @Description Generate signed URLs for uploading multiple images and store them in the database
+// @Summary Upload multiple images for a product (replace all)
+// @Description Delete all old images, then generate signed URLs for uploading new images and store them in the database. Use ?image_amount to specify the number of images.
 // @Tags product-images
 // @Accept json
 // @Produce json
 // @Param id path int true "Product ID"
-// @Param request body models.ImagesRequest true "Images data"
+// @Param image_amount query int true "Number of images to create and get upload URLs for"
 // @Success 200 {object} models.ImagesArrayResponse
 // @Router /products/{id}/images [post]
 func UploadImagesProduct(c *fiber.Ctx) error {
@@ -123,9 +165,11 @@ func UploadImagesProduct(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid product ID"})
 	}
 
-	var body models.ImagesRequest
-	if err := c.BodyParser(&body); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request payload"})
+	// Parse image_amount query
+	imageAmountStr := c.Query("image_amount", "0")
+	imageAmount, err := strconv.Atoi(imageAmountStr)
+	if err != nil || imageAmount < 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid image_amount query parameter"})
 	}
 
 	var product models.Product
@@ -133,33 +177,32 @@ func UploadImagesProduct(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Product not found"})
 	}
 
+	// Delete all old images for this product
+	if err := db.DB.Where("product_id = ?", productID).Delete(&models.Image{}).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to delete old images"})
+	}
+
 	var results []models.ImageResponse
 
-	for _, imgReq := range body.Images {
-		order := imgReq.Order
-
-		fileName := fmt.Sprintf("%d-%d.png", product.ID, order)
+	for i := 1; i <= imageAmount; i++ {
+		fileName := fmt.Sprintf("%d-%d.png", product.ID, i)
 		filePath := fmt.Sprintf("products/%d/%s", product.ID, fileName)
-
 		signedURL, publicURL, err := db.Storage.GenerateUploadURL("product-images", filePath)
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 		}
-
 		image := models.Image{
 			ProductID: product.ID,
 			FilePath:  filePath,
-			UploadURL: &signedURL,
 			PublicURL: &publicURL,
-			Order:     order,
+			Order:     i,
 		}
-
-		db.DB.Clauses(clause.OnConflict{
-			Columns:   []clause.Column{{Name: "product_id"}, {Name: "order"}},
-			DoUpdates: clause.AssignmentColumns([]string{"file_path", "upload_url", "public_url"}),
-		}).Create(&image)
-
-		results = append(results, image.ToResponse(true))
+		if err := db.DB.Create(&image).Error; err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+		}
+		imgResp := image.ToResponse()
+		imgResp.UploadURL = &signedURL
+		results = append(results, imgResp)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(models.ImagesArrayResponse{
@@ -174,7 +217,7 @@ func UploadImagesProduct(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Product ID"
-// @Param request body models.ImagesRequest true "Image IDs"
+// @Param request body models.ImagesRequest true "Image Orders to delete"
 // @Success 200 {object} models.MessageResponse
 // @Router /products/{id}/images [delete]
 func DeleteImagesProduct(c *fiber.Ctx) error {
@@ -189,15 +232,11 @@ func DeleteImagesProduct(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request payload"})
 	}
 
-	if len(body.Images) == 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "No images provided"})
+	if len(body.Orders) == 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "No image orders provided"})
 	}
 
-	// collect orders
-	var orders []int
-	for _, img := range body.Images {
-		orders = append(orders, img.Order)
-	}
+	orders := body.Orders
 
 	var images []models.Image
 	if err := db.DB.Where("product_id = ? AND `order` IN ?", productID, orders).Find(&images).Error; err != nil {

@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	// "Bakery_Pos/models"
+	"Bakery_Pos/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -28,17 +28,17 @@ func Connect_DB() {
 
 	log.Println("✅ Connected to Supabase PostgreSQL")
 
-	// if err := DB.AutoMigrate(
-	// 	&models.User{},
-	// 	&models.Cart{},
-	// 	&models.CartItem{},
-	// 	&models.Product{},
-	// 	&models.Image{},
-	// 	&models.Promotion{},
-	// 	&models.Order{},
-	// 	&models.OrderItem{},
-	// ); err != nil {
-	// 	log.Fatalf("AutoMigrate failed: %v", err)
-	// }
+	if err := DB.AutoMigrate(
+		&models.User{},
+		&models.Cart{},
+		&models.CartItem{},
+		&models.Product{},
+		&models.Image{},
+		&models.Promotion{},
+		&models.Order{},
+		&models.OrderItem{},
+	); err != nil {
+		log.Fatalf("AutoMigrate failed: %v", err)
+	}
 	log.Println("✅ Auto Migration completed")
 }

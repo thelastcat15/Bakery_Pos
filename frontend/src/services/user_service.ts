@@ -2,15 +2,20 @@ import { User } from "@/types/user_type"
 import { api } from "./api"
 const BASE_USER = "/user"
 
+const setUserData = (user: User) => {
+  localStorage.setItem("user", JSON.stringify(user))
+}
+
 export const login = async (
   username: string,
   password: string
-): Promise<{ message: string; user: User }> => {
+): Promise<User> => {
   try {
     const response = await api.post(`${BASE_USER}/login`, {
       username,
       password,
     })
+    setUserData(response.data)
     return response.data
   } catch (error) {
     console.error("Login error:", error)
@@ -21,12 +26,13 @@ export const login = async (
 export const register = async (
   username: string,
   password: string
-): Promise<{ message: string; user: User }> => {
+): Promise<User> => {
   try {
     const response = await api.post(`${BASE_USER}/register`, {
       username,
       password,
     })
+    setUserData(response.data)
     return response.data
   } catch (error) {
     console.error("Register error:", error)

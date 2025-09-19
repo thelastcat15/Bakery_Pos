@@ -27,7 +27,7 @@ export const RegisterForm = () => {
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (formData.password1 !== formData.password2) {
@@ -35,13 +35,13 @@ export const RegisterForm = () => {
       return
     }
 
-    const response = register(formData.username, formData.password1)
-
-    console.log("Form submitted:", {
-      username: formData.username,
-      password: formData.password1,
-    })
-    console.log(response)
+    try {
+      const response = await register(formData.username, formData.password1)
+      console.log("Register successful:", response.username)
+      window.location.href = "/"
+    } catch (error) {
+      console.error("Register failed:", error)
+    }
   }
 
   return (
@@ -123,16 +123,19 @@ export const LoginForm = () => {
     }))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    const response = login(formData.username, formData.password)
-
-    console.log("Form submitted:", {
-      username: formData.username,
-      password: formData.password,
-    })
-    console.log(response)
+    if (!formData.username || !formData.password) {
+      return
+    }
+    try {
+      const response = await login(formData.username, formData.password)
+      console.log("Login successful:", response.username)
+      window.location.href = "/"
+    } catch (error) {
+      console.error("Login failed:", error)
+    }
   }
 
   return (

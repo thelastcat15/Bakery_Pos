@@ -9,13 +9,12 @@ type MessageResponse struct {
 }
 
 type UserResponse struct {
-	Message string `json:"message"`
-	User    struct {
-		UserID   uuid.UUID `json:"userid"`
-		Role     string    `json:"role"`
-		Username string    `json:"username"`
-		Exp      int64     `json:"exp"`
-	} `json:"user"`
+	UserID      uuid.UUID `json:"userid"`
+	Role        string    `json:"role"`
+	Username    string    `json:"username"`
+	Exp         *int64    `json:"exp"`
+	Place       *string   `json:"place,omitempty"`
+	PhoneNumber *string   `json:"phone_number,omitempty"`
 }
 
 type ProductResponse struct {
@@ -34,7 +33,6 @@ type ImagesArrayResponse struct {
 }
 
 type ImageResponse struct {
-	ID        uint    `json:"id"`
 	FileName  string  `json:"file_name"`
 	PublicURL *string `json:"public_url,omitempty"`
 	UploadURL *string `json:"upload_url,omitempty"`
