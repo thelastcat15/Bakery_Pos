@@ -152,7 +152,7 @@ const OrderManagement = () => {
                           {item.name} x{item.quantity}
                         </span>
                         <span>
-                          ฿{(item.price * item.quantity).toLocaleString()}
+                          ฿{(item.price * item.quantity!!).toLocaleString()}
                         </span>
                       </div>
                     ))}

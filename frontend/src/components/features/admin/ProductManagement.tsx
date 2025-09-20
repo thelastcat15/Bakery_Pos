@@ -2,6 +2,7 @@
 
 import {
   createProduct,
+  deleteProduct,
   getImagesById,
   uploadImageProduct,
 } from "@/services/product_service"
@@ -124,6 +125,8 @@ const ProductManagement = () => {
   const handleDeleteProduct = async (productId: number) => {
     try {
       // call api
+      if (!productId) return
+      await deleteProduct(productId)
 
       setProducts(products.filter((p) => p.id !== productId))
     } catch (error) {
@@ -445,9 +448,7 @@ const ProductManagement = () => {
                             </button>
                             <button
                               onClick={() => {
-                                setProducts(
-                                  products.filter((p) => p.id !== product.id)
-                                )
+                                handleDeleteProduct(product.id as number)
                               }}
                               className="bg-red-500 text-white px-2 py-1 rounded text-sm">
                               ลบ

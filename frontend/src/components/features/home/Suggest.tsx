@@ -1,9 +1,19 @@
 import { SuggestList } from "@/components/common/List"
 import { getAllProducts } from "@/services/product_service"
+import { Product } from "@/types/product_type"
+import { useEffect, useState } from "react"
 
-const Suggest = async () => {
-  const products = await getAllProducts()
-  console.log(products)
+const Suggest = () => {
+  const [products, setProducts] = useState<Product[]>([])
+
+  const handleListProduct = async () => {
+    const data = await getAllProducts()
+    setProducts(data)
+  }
+
+  useEffect(() => {
+    handleListProduct()
+  }, [])
 
   return (
     <article className="mt-18 md:mt-24">
