@@ -3,11 +3,12 @@
 import {
   createProduct,
   deleteProduct,
+  getAllProducts,
   getImagesById,
   uploadImage,
 } from "@/services/product_service"
 import { Product } from "@/types/product_type"
-import { useState } from "react"
+import { use, useEffect, useState } from "react"
 
 const categories = ["drink", "cake", "cookie", "donut"]
 
@@ -25,6 +26,16 @@ const ProductManagement = () => {
   const [editingProduct, setEditingProduct] = useState<number | null>(null)
   const [editImageFile, setEditImageFile] = useState<File | null>(null)
   const [editImagePreview, setEditImagePreview] = useState<string>("")
+ 
+  const handleListProduct = async () => {
+    const data = await getAllProducts()
+    setProducts(data)
+  }
+
+  useEffect(() => {
+    handleListProduct()
+  }, [])
+    
 
   const handleImageUpload = (file: File) => {
     if (file && file.type.startsWith("image/")) {
@@ -45,7 +56,7 @@ const ProductManagement = () => {
       reader.onload = (e) => {
         const result = e.target?.result as string
         setEditImagePreview(result)
-        handleUpdateProduct(productId, "image", result)
+        handleUpdateProduct(productId, "images", result)
       }
       reader.readAsDataURL(file)
       setEditImageFile(file)
@@ -59,11 +70,15 @@ const ProductManagement = () => {
       if (!response.id) return
 
       // upload รูป
-      if (imageFile && response.image && response.image[0]?.upload_url) {
-        await uploadImage(imageFile, response.image[0].upload_url)
+      if (imageFile && response.images && response.images[0]?.upload_url) {
+        await uploadImage(imageFile, response.images[0].upload_url)
       }
 
-      return { ...productData, id: response.id }
+      return {
+        ...productData,
+        id: response.id,
+        images: response.images,  
+      }
     } catch (error) {
       console.error("Cannot create product")
     }
@@ -308,9 +323,9 @@ const ProductManagement = () => {
                             />
                           )}
                         </div>
-                      ) : product.image ? (
+                      ) : product.images ? (
                         <img
-                          src={product.image[0].public_url}
+                          src={product.images[0].public_url}
                           alt={product.name}
                           className="w-12 h-12 object-cover rounded border"
                         />

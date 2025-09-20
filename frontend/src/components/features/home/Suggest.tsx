@@ -1,3 +1,4 @@
+"use client"
 import { SuggestList } from "@/components/common/List"
 import { getAllProducts } from "@/services/product_service"
 import { Product } from "@/types/product_type"

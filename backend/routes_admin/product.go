@@ -59,6 +59,7 @@ func CreateProduct(c *fiber.Ctx) error {
 		for i := 1; i <= imagesAmount; i++ {
 			fileName := fmt.Sprintf("%d-%d.png", product.ID, i)
 			filePath := fmt.Sprintf("products/%d/%s", product.ID, fileName)
+			fmt.Println(filePath)
 			signedURL, publicURL, err := db.Storage.GenerateUploadURL("product-images", filePath)
 			if err != nil {
 				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})

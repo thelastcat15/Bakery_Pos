@@ -73,10 +73,10 @@ func main() {
 	order.Delete("/:order_id", routes.DeleteOrder)
 	order.Post("/:order_id/upload-slip", routes.GenerateOrderSlipURL)
 
-	// admin := api.Group("/admin", middleware.Auth, middleware.Admin)
-	// admin.Post("/edit-stock", routes.EditStock)
-	// admin.Get("/dashboard", routes.ViewDashboard)
-	// admin.Get("/promotion", routes.ViewDashboard)
+	reports := api.Group("/reports", middleware.Auth, middleware.Admin)
+	reports.Get("/products/top", routes_admin.GetTopProducts)
+	reports.Get("/sales/hourly", routes_admin.GetSalesByHour)
+	reports.Get("/sales/daily", routes_admin.GetSalesByDay)
 
 	app.Get("/*", swagger.HandlerDefault)
 	app.Listen(":5000")

@@ -16,8 +16,8 @@ type FormEditCart struct {
 
 type BodyProductRequest struct {
 	Name        string  `json:"name" gorm:"type:varchar(255);not null"`
-	Description string  `json:"description" gorm:"type:text"`
-	Tag         string  `json:"tag" gorm:"not null"`
+	Description string  `json:"detail" gorm:"type:text"`
+	Tag         string  `json:"category" gorm:"not null"`
 	Price       float64 `json:"price" gorm:"not null"`
 	Stock       int     `json:"quantity" gorm:"not null"`
 	IsActive    bool    `json:"is_active" gorm:"default:true"`

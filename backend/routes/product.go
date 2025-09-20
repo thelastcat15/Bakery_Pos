@@ -11,16 +11,32 @@ import (
 
 // GetProducts godoc
 // @Summary Get all products
-// @Description Retrieve all products with their images
+// @Description Retrieve all products with optional filters
 // @Tags product
 // @Accept json
 // @Produce json
+// @Param lowStock query bool false "Filter products with stock < 10"
+// @Param limit query int false "Number of products per page (default 20)"
+// @Param page query int false "Page number (default 1)"
 // @Success 200 {array} models.ProductResponse
 // @Router /products [get]
 func GetProducts(c *fiber.Ctx) error {
 	var products []models.Product
-	// Change "images" to "Images" to match the struct field name
-	if err := db.DB.Preload("Images").Find(&products).Error; err != nil {
+
+	// query params
+	lowStock := c.QueryBool("lowStock", false)
+	limit := c.QueryInt("limit", 20)
+	page := c.QueryInt("page", 1)
+
+	// db query
+	query := db.DB.Preload("Images")
+	if lowStock {
+		query = query.Where("stock < ?", 10)
+	}
+
+	// pagination
+	offset := (page - 1) * limit
+	if err := query.Limit(limit).Offset(offset).Find(&products).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to fetch products",
 		})

@@ -3,7 +3,7 @@ import { Image } from "./image_type"
 export interface Product {
   id?: number
   name: string
-  image?: Image[]
+  images?: Image[]
   detail: string
   price: number
   category: string
