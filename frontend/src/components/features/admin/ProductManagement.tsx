@@ -4,7 +4,7 @@ import {
   createProduct,
   deleteProduct,
   getImagesById,
-  uploadImageProduct,
+  uploadImage,
 } from "@/services/product_service"
 import { Product } from "@/types/product_type"
 import { useState } from "react"
@@ -59,9 +59,8 @@ const ProductManagement = () => {
       if (!response.id) return
 
       // upload รูป
-      if (imageFile) {
-        const uploadResponse = await uploadImageProduct(response.id, imageFile)
-        productData.image = uploadResponse.public_url
+      if (imageFile && response.image && response.image[0]?.upload_url) {
+        await uploadImage(imageFile, response.image[0].upload_url)
       }
 
       return { ...productData, id: response.id }
@@ -311,7 +310,7 @@ const ProductManagement = () => {
                         </div>
                       ) : product.image ? (
                         <img
-                          src={product.image.public_url}
+                          src={product.image[0].public_url}
                           alt={product.name}
                           className="w-12 h-12 object-cover rounded border"
                         />

@@ -4,7 +4,7 @@ const BASE_PRODUCT = "/products"
 
 export const createProduct = async (newProduct: Product): Promise<Product> => {
   try {
-    const response = await api.post<Product>(`${BASE_PRODUCT}`, newProduct)
+    const response = await api.post<Product>(`${BASE_PRODUCT}?images_amount=1`, newProduct)
     return response.data
   } catch (error) {
     console.error("Create product error:", error)
