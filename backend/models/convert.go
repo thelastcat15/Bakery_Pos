@@ -1,6 +1,17 @@
 package models
 
-func (img *Image) ToResponse(isAdmin bool) ImageResponse {
+func (user *User) ToResponse() UserResponse {
+	resp := UserResponse{
+		UserID:      user.ID,
+		Role:        user.Role,
+		Username:    user.Username,
+		Place:       user.Place,
+		PhoneNumber: user.PhoneNumber,
+	}
+	return resp
+}
+
+func (img *Image) ToResponse() ImageResponse {
 	resp := ImageResponse{
 		Order: img.Order,
 	}
@@ -8,17 +19,13 @@ func (img *Image) ToResponse(isAdmin bool) ImageResponse {
 	if img.PublicURL != nil && *img.PublicURL != "" {
 		resp.PublicURL = img.PublicURL
 	}
-
-	if isAdmin {
-		resp.UploadURL = img.UploadURL
-	}
 	return resp
 }
 
-func (p *Product) ToResponse(isAdmin bool) ProductResponse {
+func (p *Product) ToResponse() ProductResponse {
 	images := make([]ImageResponse, len(p.Images))
 	for i, img := range p.Images {
-		images[i] = img.ToResponse(isAdmin)
+		images[i] = img.ToResponse()
 	}
 
 	return ProductResponse{
@@ -33,7 +40,7 @@ func (p *Product) ToResponse(isAdmin bool) ProductResponse {
 	}
 }
 
-func (order *Order) ToResponse(isAdmin bool) OrderResponse {
+func (order *Order) ToResponse() OrderResponse {
 	resp := OrderResponse{
 		OrderID: order.ID,
 		Total:   order.Total,

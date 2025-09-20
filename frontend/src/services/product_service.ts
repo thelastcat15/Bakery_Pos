@@ -14,7 +14,7 @@ export const createProduct = async (newProduct: Product): Promise<Product> => {
 
 export const getAllProducts = async (): Promise<Product[]> => {
   try {
-    const response = await api.get<Product[]>(`${BASE_PRODUCT}`)
+    const response = await api.get(`${BASE_PRODUCT}`)
     return response.data
   } catch (error) {
     console.error("Get all product error:", error)
@@ -51,8 +51,8 @@ export const uploadImageProduct = async (productId: number, file: File) => {
       ],
     })
 
-    const response2 = await uploadImage(file, response1.data[0].upload_url)
-    return response2
+    await uploadImage(file, response1.data.images[0].upload_url)
+    return response1.data.images[0]
   } catch (error) {
     console.error("Upload image of product error:", error)
     throw error
@@ -61,11 +61,11 @@ export const uploadImageProduct = async (productId: number, file: File) => {
 
 export const uploadImage = async (file: File, uploadUrl: string) => {
   try {
-    // axios จะส่ง binary โดยตรง
     const response = await api.put(uploadUrl, file, {
       headers: {
-        "Content-Type": file.type, // เช่น image/png, image/jpeg
+        "Content-Type": file.type,
       },
+      withCredentials: false,
     })
 
     console.log("Upload success:", response.status)

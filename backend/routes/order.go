@@ -32,7 +32,7 @@ func GetAllOrders(c *fiber.Ctx) error {
 
 	var resp []models.OrderResponse
 	for _, order := range orders {
-		resp = append(resp, order.ToResponse(false))
+		resp = append(resp, order.ToResponse())
 	}
 
 	return c.Status(fiber.StatusOK).JSON(resp)
@@ -62,7 +62,7 @@ func GetOrderByID(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch order"})
 	}
 
-	return c.Status(fiber.StatusOK).JSON(order.ToResponse(false))
+	return c.Status(fiber.StatusOK).JSON(order.ToResponse())
 }
 
 // GenerateOrderSlipURL godoc

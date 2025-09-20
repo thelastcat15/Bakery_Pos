@@ -59,7 +59,7 @@ func main() {
 	product_select.Delete("/", middleware.Auth, middleware.Admin, routes_admin.DeleteProduct)
 	product_select.Get("/images", middleware.AuthOptional, routes.GetImagesProduct)
 	product_select.Post("/images", middleware.Auth, middleware.Admin, routes_admin.UploadImagesProduct)
-	product_select.Post("/images", middleware.Auth, middleware.Admin, routes_admin.DeleteImagesProduct)
+	product_select.Delete("/images", middleware.Auth, middleware.Admin, routes_admin.DeleteImagesProduct)
 
 	cart := api.Group("/cart", middleware.Auth)
 	cart.Get("/", routes.GetCart)

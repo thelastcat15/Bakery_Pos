@@ -12,8 +12,8 @@ type User struct {
 	Username    string    `gorm:"unique;not null"`
 	Password    string    `gorm:"not null"`
 	Role        string    `gorm:"default:Member"`
-	PhoneNumber string    `gorm:"size:10"`
-	Place       string
+	PhoneNumber *string   `gorm:"size:10"`
+	Place       *string
 	Cart        *Cart `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
 	CreatedAt   time.Time
 	UpdatedAt   time.Time

@@ -28,24 +28,27 @@ func (c *Client) Upload(bucket, path string, file []byte, contentType string) er
 func (c *Client) GenerateUploadURL(bucket, objectPath string) (signedURL, publicURL string, err error) {
 	urlPath := fmt.Sprintf("/object/upload/sign/%s/%s", bucket, objectPath)
 
-	resp, err := c.DoRequest("POST", urlPath, nil)
+	resp, err := c.DoRequest("POST", urlPath, struct{}{})
 	if err != nil {
 		return "", "", fmt.Errorf("failed request: %w", err)
 	}
 	defer resp.Body.Close()
 
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", "", fmt.Errorf("failed to read body: %w", err)
+	}
+
 	if resp.StatusCode >= 300 {
-		data, _ := io.ReadAll(resp.Body)
 		return "", "", fmt.Errorf("supabase error: %s", string(data))
 	}
 
-	var res struct {
-		SignedURL string `json:"signedURL"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
-		return "", "", err
+	var res SignUploadFile
+	if err := json.Unmarshal(data, &res); err != nil {
+		return "", "", fmt.Errorf("failed to decode JSON: %w", err)
 	}
 
+	signedURL = fmt.Sprintf("%s%s", c.baseURL(), res.URL)
 	publicURL = fmt.Sprintf("%s/object/public/%s/%s", c.baseURL(), bucket, objectPath)
-	return res.SignedURL, publicURL, nil
+	return signedURL, publicURL, nil
 }

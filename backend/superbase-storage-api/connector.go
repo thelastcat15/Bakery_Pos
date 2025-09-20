@@ -1,6 +1,8 @@
 package storageapi
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -37,7 +39,17 @@ func (s *Client) baseURL() string {
 	return fmt.Sprintf("https://%s.supabase.co/storage/v1", s.ProjectID)
 }
 
-func (c *Client) DoRequest(method, path string, body io.Reader) (*http.Response, error) {
+func (c *Client) DoRequest(method, path string, payload any) (*http.Response, error) {
+	var body io.Reader
+
+	if payload != nil {
+		jsonBytes, err := json.Marshal(payload)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal payload to JSON: %w", err)
+		}
+		body = bytes.NewReader(jsonBytes)
+	}
+
 	req, err := http.NewRequest(method, c.baseURL()+path, body)
 	if err != nil {
 		return nil, err

@@ -7,9 +7,9 @@ import (
 
 type Order struct {
 	gorm.Model
-	UserID uuid.UUID   `gorm:"not null;index"`
+	UserID uuid.UUID `gorm:"not null;index"`
 	Total  float64
-  Status string      `gorm:"type:enum('pending','confirmed','shipping','delivered');default:'pending'"`
+	Status string      `gorm:"type:varchar(20);check:status IN ('pending','confirmed','shipping','delivered')"`
 	Items  []OrderItem `gorm:"constraint:OnDelete:CASCADE;"`
 }
 
@@ -24,4 +24,3 @@ type OrderItem struct {
 	Price       float64
 	ImageURL    string
 }
-

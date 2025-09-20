@@ -1,14 +1,13 @@
 package storageapi
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 )
 
 func (c *Client) ListBuckets() ([]BucketInfo, error) {
-	resp, err := c.DoRequest("GET", "/bucket", nil)
+	resp, err := c.DoRequest("GET", "/bucket", struct{}{})
 	if err != nil {
 		return nil, err
 	}
@@ -42,12 +41,7 @@ func (c *Client) CreateBucket(name string, public bool) error {
 		Public: public,
 	}
 
-	data, err := json.Marshal(payload)
-	if err != nil {
-		return err
-	}
-
-	resp, err := c.DoRequest("POST", urlPath, bytes.NewReader(data))
+	resp, err := c.DoRequest("POST", urlPath, payload)
 	if err != nil {
 		return err
 	}
