@@ -2,148 +2,137 @@ import { useState, useCallback, useEffect } from "react"
 import { CartItem } from "@/types/cart_type"
 import { Product } from "@/types/product_type"
 import { usePromotions } from "./usePromotions"
-
-const CART_STORAGE_KEY = "shopping_cart"
-
-// helper function for lacalStorage
-const saveCartToStorage = (cartItems: CartItem[]) => {
-  try {
-    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems))
-  } catch (error) {
-    console.error("Failed to save cart to localStorage")
-  }
-}
-
-const loadCartFromStorage = (): CartItem[] => {
-  try {
-    const savedCart = localStorage.getItem(CART_STORAGE_KEY)
-    return savedCart ? JSON.parse(savedCart) : []
-  } catch (error) {
-    console.error("Failed to load cart from localStorage:", error)
-    return []
-  }
-}
+import {
+  getCart as apiGetCart,
+  updateQuantityInCart as apiUpdateQuantity,
+  deleteCart as apiDeleteCart,
+} from "@/services/cart_service"
 
 export const UseCart = () => {
   const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [isLoaded, setIsLoaded] = useState(false)
   const { getDiscountedPrice, getPriceDisplay } = usePromotions()
 
-  // Load cart from localStorafe on mount
+  // โหลด cart จาก server ตอน mount
   useEffect(() => {
-    const savedCart = loadCartFromStorage()
-    setCartItems(savedCart)
-    setIsLoaded(true)
-  }, [])
-
-  // Save cart to localstorage whenever cartItems changes
-  useEffect(() => {
-    if (isLoaded) {
-      saveCartToStorage(cartItems)
+    const loadCart = async () => {
+      try {
+        const items = await apiGetCart()
+        setCartItems(items)
+      } catch (error) {
+        console.error("Failed to load cart from server", error)
+      } finally {
+        setIsLoaded(true)
+      }
     }
-  }, [cartItems, isLoaded])
-
-  const addToCart = useCallback((product: Product, quantity: number = 1) => {
-    setCartItems((prev) => {
-      const existingItem = prev.find((item) => item.id === product.id)
-
-      if (existingItem) {
-        return prev.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity!! + quantity }
-            : item
-        )
-      } else {
-        return [...prev, { ...product, quantity }]
-      }
-    })
+    loadCart()
   }, [])
 
-  const removeFromCart = useCallback((productId: number) => {
-    setCartItems((prev) => prev.filter((item) => item.id !== productId))
-  }, [])
-
-  const updateQuantity = useCallback(
-    (productId: number, quantity: number) => {
-      if (quantity <= 0) {
-        removeFromCart(productId)
-        return
+  // เพิ่มสินค้าไป cart (เรียก API update)
+  const addToCart = useCallback(
+    async (product: Product, quantity: number = 1) => {
+      try {
+        const existing = cartItems.find((item) => item.id === product.id)
+        const newQuantity = existing ? existing.quantity + quantity : quantity
+        const updatedItems = await apiUpdateQuantity(product.id!!, newQuantity)
+        setCartItems(updatedItems)
+      } catch (error) {
+        console.error("Failed to add item to cart", error)
       }
-
-      setCartItems((prev) =>
-        prev.map((item) =>
-          item.id === productId ? { ...item, quantity } : item
-        )
-      )
     },
-    [removeFromCart]
+    [cartItems]
   )
 
-  const increaseQuantity = useCallback((productId: number) => {
-    setCartItems((prev) =>
-      prev.map((item) =>
-        item.id == productId ? { ...item, quantity: item.quantity!! + 1 } : item
-      )
-    )
+  // ลบสินค้า
+  const removeFromCart = useCallback(
+    async (productId: number) => {
+      try {
+        const updatedItems = await apiUpdateQuantity(productId, 0)
+        setCartItems(updatedItems)
+      } catch (error) {
+        console.error("Failed to remove item from cart", error)
+      }
+    },
+    []
+  )
+
+  // อัพเดตจำนวนสินค้า
+  const updateQuantity = useCallback(
+    async (productId: number, quantity: number) => {
+      try {
+        const updatedItems = await apiUpdateQuantity(productId, quantity)
+        setCartItems(updatedItems)
+      } catch (error) {
+        console.error("Failed to update quantity", error)
+      }
+    },
+    []
+  )
+
+  // เพิ่มจำนวน +1
+  const increaseQuantity = useCallback(
+    async (productId: number) => {
+      const item = cartItems.find((i) => i.id === productId)
+      if (!item) return
+      await updateQuantity(productId, item.quantity + 1)
+    },
+    [cartItems, updateQuantity]
+  )
+
+  // ลดจำนวน -1
+  const decreaseQuantity = useCallback(
+    async (productId: number) => {
+      const item = cartItems.find((i) => i.id === productId)
+      if (!item) return
+      const newQty = Math.max(0, item.quantity - 1)
+      await updateQuantity(productId, newQty)
+    },
+    [cartItems, updateQuantity]
+  )
+
+  // ลบทั้งหมด
+  const clearCart = useCallback(async () => {
+    try {
+      await apiDeleteCart()
+      setCartItems([])
+    } catch (error) {
+      console.error("Failed to clear cart", error)
+    }
   }, [])
 
-  const decreaseQuantity = useCallback((productId: number) => {
-    setCartItems((prev) =>
-      prev
-        .map((item) =>
-          item.id === productId
-            ? { ...item, quantity: Math.max(0, item.quantity!! - 1) }
-            : item
-        )
-        .filter((item) => item.quantity!! > 0)
-    )
-  }, [])
-
-  const clearCart = useCallback(() => {
-    setCartItems([])
-  }, [])
-
+  // ดึงข้อมูล cart สำหรับ display
   const getTotalItems = useCallback(() => {
-    return cartItems.reduce((total, item) => total + item.quantity!!, 0)
+    return cartItems.reduce((total, item) => total + item.quantity, 0)
   }, [cartItems])
 
-  // Updated to use promotional pricing
   const getTotalPrice = useCallback(() => {
     return cartItems.reduce((total, item) => {
-      const discountedPrice = getDiscountedPrice(item)
-      return total + discountedPrice * item.quantity!!
+      const discounted = getDiscountedPrice(item)
+      return total + discounted * item.quantity
     }, 0)
   }, [cartItems, getDiscountedPrice])
 
   const getOriginalTotalPrice = useCallback(() => {
-    return cartItems.reduce(
-      (total, item) => total + item.price * item.quantity!!,
-      0
-    )
+    return cartItems.reduce((total, item) => total + item.price * item.quantity, 0)
   }, [cartItems])
 
   const getTotalSavings = useCallback(() => {
-    const originalTotal = getOriginalTotalPrice()
-    const discountedTotal = getTotalPrice()
-    return originalTotal - discountedTotal
+    return getOriginalTotalPrice() - getTotalPrice()
   }, [getOriginalTotalPrice, getTotalPrice])
 
   const getItemQuantity = useCallback(
     (productId: number) => {
-      const item = cartItems.find((item) => item.id === productId)
+      const item = cartItems.find((i) => i.id === productId)
       return item?.quantity || 0
     },
     [cartItems]
   )
 
   const getCartItemsWithPromotions = useCallback(() => {
-    return cartItems.map((item) => {
-      const priceDisplay = getPriceDisplay(item)
-      return {
-        ...item,
-        ...priceDisplay,
-      }
-    })
+    return cartItems.map((item) => ({
+      ...item,
+      ...getPriceDisplay(item),
+    }))
   }, [cartItems, getPriceDisplay])
 
   return {

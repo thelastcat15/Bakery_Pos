@@ -1,11 +1,13 @@
 package routes
 
 import (
-  "strconv"
+	"Bakery_Pos/db"
+	"Bakery_Pos/models"
+	"fmt"
+	"strconv"
+
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
-	"Bakery_Pos/models"
-	"Bakery_Pos/db"
 
 	"github.com/google/uuid"
 )
@@ -23,8 +25,10 @@ func GetCart(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid user ID",
-    })
+		})
 	}
+
+	fmt.Println("Fetching cart for user ID:", 1)
 
 	var cart models.Cart
 	if err := db.DB.Preload("Items.Product.Promotions").Where("user_id = ?", userID).First(&cart).Error; err != nil {
@@ -44,6 +48,8 @@ func GetCart(c *fiber.Ctx) error {
 		}
 	}
 
+	fmt.Println("Fetching cart for user ID:", 2)
+
 	var items []models.CartItemResponse
 	for _, item := range cart.Items {
 		itemResp := models.CartItemResponse{
@@ -57,9 +63,10 @@ func GetCart(c *fiber.Ctx) error {
 		items = append(items, itemResp)
 	}
 
+	fmt.Println("Fetching cart for user ID:", 3)
+
 	return c.Status(fiber.StatusOK).JSON(items)
 }
-
 
 // DeleteCart godoc
 // @Summary Delete user's cart
@@ -74,7 +81,7 @@ func DeleteCart(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid user ID",
-    })
+		})
 	}
 
 	if err := db.DB.Where("user_id = ?", userID).Delete(&models.Cart{}).Error; err != nil {
@@ -105,7 +112,7 @@ func UpdateProductCart(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid user ID",
-    })
+		})
 	}
 
 	productIDParam := c.Params("product_id")
@@ -185,7 +192,6 @@ func UpdateProductCart(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(items)
 }
 
-
 // Checkout godoc
 // @Summary Checkout cart
 // @Description Convert user's cart to an order
@@ -197,22 +203,16 @@ func Checkout(c *fiber.Ctx) error {
 	userIDStr := c.Locals("userid").(string)
 	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid user ID",
-    })
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid user ID"})
 	}
 
 	var cart models.Cart
 	if err := db.DB.Preload("Items.Product.Promotions").Where("user_id = ?", userID).First(&cart).Error; err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-			"error": "Cart not found",
-		})
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Cart not found"})
 	}
 
 	if len(cart.Items) == 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Cart is empty",
-		})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Cart is empty"})
 	}
 
 	var total float64
@@ -235,7 +235,6 @@ func Checkout(c *fiber.Ctx) error {
 
 	for _, item := range cart.Items {
 		price := item.Product.FinalPrice()
-
 		orderItem := models.OrderItem{
 			OrderID:   order.ID,
 			ProductID: item.ProductID,
@@ -254,15 +253,28 @@ func Checkout(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "Failed to clear cart"})
 	}
 
+	filePath := fmt.Sprintf("orders/%d/receipt.png", order.ID)
+	signedURL, publicURL, err := db.Storage.GenerateUploadURL("orders_bucket", filePath)
+	if err != nil {
+		tx.Rollback()
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to generate upload URL"})
+	}
+
+	if err := tx.Model(&order).Update("receipt_url", publicURL).Error; err != nil {
+		tx.Rollback()
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to save receipt URL"})
+	}
+
 	tx.Commit()
 
 	res := models.CheckoutResponse{
-		Message: "Checkout successful",
-		OrderID: order.ID,
-		Total:   total,
-		Status:  order.Status,
+		Message:   "Checkout successful",
+		OrderID:   order.ID,
+		Total:     total,
+		Status:    order.Status,
+		UploadURL: &signedURL,
+		PublicURL: &publicURL,
 	}
 
 	return c.Status(200).JSON(res)
 }
-

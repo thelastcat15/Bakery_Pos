@@ -47,10 +47,12 @@ type CartItemResponse struct {
 }
 
 type CheckoutResponse struct {
-	Message string  `json:"message"`
-	OrderID uint    `json:"order_id"`
-	Total   float64 `json:"total"`
-	Status  string  `json:"status"`
+	Message   string  `json:"message"`
+	OrderID   uint    `json:"order_id"`
+	Total     float64 `json:"total"`
+	Status    string  `json:"status"`
+	PublicURL *string `json:"public_url,omitempty"`
+	UploadURL *string `json:"upload_url,omitempty"`
 }
 
 type OrderResponse struct {

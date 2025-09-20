@@ -35,9 +35,9 @@ export const CardProduct = ({ product }: CardProductProps) => {
   return (
     <div className="bg-white rounded-2xl shadow-md hover:shadow-xl hover:-translate-y-2 transition-all duration-300 overflow-hidden flex flex-col">
       <figure className="relative w-full h-40 md:h-56">
-        {product.image?.public_url && (
+        {product.images!![0]?.public_url && (
           <Image
-            src={product.image?.public_url}
+            src={product.images!![0]?.public_url}
             alt={product.name}
             fill
             className="object-cover hover:shadow-xl hover:scale-[1.02] transition-all duration-300"
@@ -109,7 +109,7 @@ export const CardCart = ({
       <div className="flex items-center gap-4">
         <figure className="relative h-18 w-18 md:h-20 md:w-20">
           <Image
-            src={product.image?.public_url!!}
+            src={product.images ? product.images[0].public_url!! : ""}
             alt={product.name}
             fill
             className="object-cover p-1 rounded-lg"
