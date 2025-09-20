@@ -22,6 +22,16 @@ export const getAllProducts = async (): Promise<Product[]> => {
   }
 }
 
+export const getNearlyOutStockProducts = async (): Promise<Product[]> => {
+  try {
+    const response = await api.get(`${BASE_PRODUCT}?lowStock=true`)
+    return response.data
+  } catch (error) {
+    console.error("Get nearly out-of-stock products error:", error)
+    throw error
+  }
+}
+
 export const updateProduct = async (productId: number): Promise<Product> => {
   try {
     const response = await api.put<Product>(`${BASE_PRODUCT}/${productId}`)

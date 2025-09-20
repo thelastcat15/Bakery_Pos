@@ -5,6 +5,7 @@ import {
   deleteProduct,
   getAllProducts,
   getImagesById,
+  getNearlyOutStockProducts,
   uploadImage,
 } from "@/services/product_service"
 import { Product } from "@/types/product_type"
@@ -14,6 +15,7 @@ const categories = ["drink", "cake", "cookie", "donut"]
 
 const ProductManagement = () => {
   const [products, setProducts] = useState<Product[]>([])
+  const [outStockproducts, setOutStockproducts] = useState<Product[]>([])
   const [newProduct, setNewProduct] = useState({
     name: "",
     category: "",
@@ -34,8 +36,18 @@ const ProductManagement = () => {
 
   useEffect(() => {
     handleListProduct()
+    handleUpdateOutStockProducts()
   }, [])
     
+  const handleUpdateOutStockProducts = async () => {
+    try {
+      const response = await getNearlyOutStockProducts()
+      console.log("Nearly out-of-stock products:", response)
+      setOutStockproducts(response)
+    } catch (error) {
+      console.error("Error fetching out-of-stock products:", error)
+    }
+  }
 
   const handleImageUpload = (file: File) => {
     if (file && file.type.startsWith("image/")) {
@@ -485,7 +497,7 @@ const ProductManagement = () => {
           {"สินค้าที่เหลือน้อย (< 10 ชิ้น)"}
         </h3>
         <div className="space-y-2">
-          {products
+          {outStockproducts
             .filter((p) => (p.quantity || 0) < 10)
             .map((product) => (
               <div
