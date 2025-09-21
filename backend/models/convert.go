@@ -49,3 +49,36 @@ func (order *Order) ToResponse() OrderResponse {
 	}
 	return resp
 }
+
+func (c *Cart) ToResponse() []CartItemResponse {
+	var items []CartItemResponse
+
+	for _, item := range c.Items {
+		if item.Product == nil {
+			continue
+		}
+
+		var images []ImageResponse
+		for _, img := range item.Product.Images {
+			images = append(images, ImageResponse{
+				PublicURL: img.PublicURL,
+				Order:     img.Order,
+			})
+		}
+
+		items = append(items, CartItemResponse{
+			ProductID:   item.ProductID,
+			ProductName: item.Product.Name,
+			Quantity:    item.Quantity,
+			Price:       item.Product.Price,
+			SalePrice:   item.Product.FinalPrice(),
+			Images:      images,
+		})
+	}
+
+	if items == nil {
+		items = []CartItemResponse{}
+	}
+
+	return items
+}
