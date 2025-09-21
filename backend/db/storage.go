@@ -25,4 +25,5 @@ func Connect_Storage() {
 
 	Storage = storageapi.NewClient(projectID, anonKey, secretKey)
 	Storage.CreateBucket("product-images", true)
+	Storage.CreateBucket("orders_bucket", true)
 }

@@ -7,13 +7,16 @@ export interface CustomerInfo {
 }
 
 export interface Order {
-  id: string
+  order_id: string
   date: string
   items: Product[]
   customerInfo: CustomerInfo
   total: number
   status: "pending" | "confirmed" | "shipping" | "delivered"
-  paymentSlip?: File | string
+  payment_slip?: File | string
   createdAt: Date
   updatedAt: Date
 }
+
+
+// Add id Order Custom

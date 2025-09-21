@@ -88,8 +88,8 @@ func GenerateOrderSlipURL(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Order not found"})
 	}
 
-	fileName := fmt.Sprintf("order-%d-slip.png", order.ID)
-	filePath := fmt.Sprintf("orders/%d/%s", order.ID, fileName)
+	fileName := fmt.Sprintf("order-%s-slip.png", order.ID)
+	filePath := fmt.Sprintf("orders/%s/%s", order.ID, fileName)
 
 	signedURL, publicURL, err := db.Storage.GenerateUploadURL("order-slips", filePath)
 	if err != nil {

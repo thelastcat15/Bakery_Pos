@@ -3,6 +3,9 @@ import { PrimaryButton } from "@/components/common/Button"
 import { CartList } from "@/components/common/List"
 import { UseCart } from "@/hooks/useCart"
 import { usePromotions } from "@/hooks/usePromotions"
+import { checkout } from "@/services/cart_service"
+import { useRouter } from "next/navigation";
+
 
 const CartPage = () => {
   const {
@@ -20,6 +23,18 @@ const CartPage = () => {
   const { getActiveAnnouncements } = usePromotions()
   const announcements = getActiveAnnouncements()
   const totalSavings = getTotalSavings()
+  const router = useRouter();
+
+  const handleCheckout = async () => {
+    try {
+      const checkoutData = await checkout()
+      if (checkoutData.order_id) {
+        router.push(`/checkout/${checkoutData.order_id}`);
+      }
+    } catch (error) {
+      console.error("Checkout error:", error)
+    }
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-4 md:px-0 mt-4 md:mt-8">
@@ -98,7 +113,7 @@ const CartPage = () => {
             </div>
           </div>
           <PrimaryButton
-            onClick={() => console.log("Proceed to checkout")}
+            onClick={handleCheckout}
             className="w-full">
             ดำเนินการชำระเงิน
           </PrimaryButton>

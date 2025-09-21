@@ -48,19 +48,20 @@ type CartItemResponse struct {
 }
 
 type CheckoutResponse struct {
-	Message   string  `json:"message"`
-	OrderID   uint    `json:"order_id"`
+	Message string  `json:"message"`
+	OrderID string  `json:"order_id"`
+	Total   float64 `json:"total"`
+	Status  string  `json:"status"`
+}
+
+type OrderResponse struct {
+	OrderID   string  `json:"order_id"`
 	Total     float64 `json:"total"`
 	Status    string  `json:"status"`
 	PublicURL *string `json:"public_url,omitempty"`
 	UploadURL *string `json:"upload_url,omitempty"`
-}
 
-type OrderResponse struct {
-	OrderID uint        `json:"order_id"`
-	Total   float64     `json:"total"`
-	Status  string      `json:"status"`
-	Items   []OrderItem `json:"items"`
+	Items []OrderItem `json:"items"`
 }
 
 type UploadOrderSlipResponse struct {

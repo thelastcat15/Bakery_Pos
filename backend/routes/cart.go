@@ -3,7 +3,6 @@ package routes
 import (
 	"Bakery_Pos/db"
 	"Bakery_Pos/models"
-	"fmt"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
@@ -227,27 +226,13 @@ func Checkout(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "Failed to clear cart"})
 	}
 
-	filePath := fmt.Sprintf("orders/%d/receipt.png", order.ID)
-	signedURL, publicURL, err := db.Storage.GenerateUploadURL("orders_bucket", filePath)
-	if err != nil {
-		tx.Rollback()
-		return c.Status(500).JSON(fiber.Map{"error": "Failed to generate upload URL"})
-	}
-
-	if err := tx.Model(&order).Update("receipt_url", publicURL).Error; err != nil {
-		tx.Rollback()
-		return c.Status(500).JSON(fiber.Map{"error": "Failed to save receipt URL"})
-	}
-
 	tx.Commit()
 
 	res := models.CheckoutResponse{
-		Message:   "Checkout successful",
-		OrderID:   order.ID,
-		Total:     total,
-		Status:    order.Status,
-		UploadURL: &signedURL,
-		PublicURL: &publicURL,
+		Message: "Checkout successful",
+		OrderID: order.ID,
+		Total:   total,
+		Status:  order.Status,
 	}
 
 	return c.Status(200).JSON(res)
