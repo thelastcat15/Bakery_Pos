@@ -43,6 +43,10 @@ func main() {
 	}))
 
 	api := app.Group("/api")
+	api.Use(func(c *fiber.Ctx) error {
+		log.Printf("Request: %s %s, IP: %s", c.Method(), c.OriginalURL(), c.IP())
+		return c.Next()
+	})
 
 	user := api.Group("/user")
 	user.Post("/login", routes.LoginHandler)
