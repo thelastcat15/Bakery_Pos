@@ -12,16 +12,17 @@ type Order struct {
 	ID          string    `gorm:"primaryKey"`
 	UserID      uuid.UUID `gorm:"not null;index"`
 	Total       float64
-	PaymentSlip string      `gorm:"type:text"`
-	Status      string      `gorm:"type:varchar(20);check:status IN ('pending','confirmed','shipping','delivered')"`
-	Items       []OrderItem `gorm:"constraint:OnDelete:CASCADE;"`
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	PaymentSlip string `gorm:"type:text"`
+	Status      string `gorm:"type:varchar(20);check:status IN ('pending','confirmed','shipping','delivered')"`
+
+	Items     []OrderItem `gorm:"foreignKey:OrderID;references:ID;constraint:OnDelete:CASCADE"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 type OrderItem struct {
 	ID        uint   `gorm:"primaryKey;autoIncrement"`
-	OrderID   string `gorm:"not null;index:idx_order_product,unique"`
+	OrderID   string `gorm:"not null;index"`
 	ProductID uint   `gorm:"not null;index:idx_order_product,unique"`
 	Quantity  int    `gorm:"not null"`
 
