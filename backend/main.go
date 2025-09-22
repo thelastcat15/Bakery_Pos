@@ -36,7 +36,7 @@ func main() {
 		StrictRouting: false,
 	})
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "*",
+		AllowOrigins:     "http://localhost:3000,http://localhost:5000,https://silver-guacamole-p6xpxx5xg4ph7j4-3000.app.github.dev/",
 		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
 		AllowMethods:     "GET,POST,PUT,DELETE",
 		AllowCredentials: true,
