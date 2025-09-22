@@ -11,10 +11,11 @@ type MessageResponse struct {
 type UserResponse struct {
 	UserID      uuid.UUID `json:"userid"`
 	Role        string    `json:"role"`
+	Name        *string   `json:"name"`
 	Username    string    `json:"username"`
 	Exp         *int64    `json:"exp"`
-	Place       *string   `json:"place,omitempty"`
-	PhoneNumber *string   `json:"phone_number,omitempty"`
+	Place       *string   `json:"address,omitempty"`
+	PhoneNumber *string   `json:"phone,omitempty"`
 }
 
 type ProductResponse struct {

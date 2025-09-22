@@ -20,6 +20,7 @@ type Order struct {
 }
 
 type OrderItem struct {
+	ID        uint   `gorm:"primaryKey;autoIncrement"`
 	OrderID   string `gorm:"not null;index:idx_order_product,unique"`
 	ProductID uint   `gorm:"not null;index:idx_order_product,unique"`
 	Quantity  int    `gorm:"not null"`

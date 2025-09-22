@@ -4,6 +4,7 @@ func (user *User) ToResponse() UserResponse {
 	resp := UserResponse{
 		UserID:      user.ID,
 		Role:        user.Role,
+		Name:        user.Name,
 		Username:    user.Username,
 		Place:       user.Place,
 		PhoneNumber: user.PhoneNumber,

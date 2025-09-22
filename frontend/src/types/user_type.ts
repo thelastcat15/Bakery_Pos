@@ -1,10 +1,11 @@
 export interface User {
   userid: number
   role: string
+  name: string | null
   username: string
   exp: number | null
-  place: string | null
-  phone_number: string | null
+  address: string | null
+  phone: string | null
 }
 
 export interface UserUpdateData {

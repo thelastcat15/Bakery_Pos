@@ -6,16 +6,26 @@ export interface CustomerInfo {
   address: string
 }
 
+export interface OrderItem {
+  orderID: string
+  productID: number
+  quantity: number
+
+  name: string
+  description: string
+  tag: string
+  price: number
+  imageURL: string
+}
+
 export interface Order {
   order_id: string
-  date: string
-  items: Product[]
-  customerInfo: CustomerInfo
   total: number
-  status: "pending" | "confirmed" | "shipping" | "delivered"
-  payment_slip?: File | string
-  createdAt: Date
-  updatedAt: Date
+  status: string
+  public_url?: string
+  upload_url?: string
+
+  items: OrderItem[]
 }
 
 

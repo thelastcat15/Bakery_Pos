@@ -14,17 +14,9 @@ const saveUserToStorage = (user: User) => {
 
 const loadUserFromStorage = (): User | null => {
   try {
-    // In real app, this would fetch from backend/token
-    // Mock user for demo
-    return {
-      id: 1,
-      name: "นายสมชาย ใจดี",
-      username: "customer001",
-      email: "customer@example.com",
-      phone: "081-234-5678",
-      address: "123 ถนนสุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพมหานคร 10110",
-      role: "user",
-    }
+    const userData = localStorage.getItem("user")
+    if (!userData) return null
+    return JSON.parse(userData) as User
   } catch (error) {
     console.error("Failed to load user:", error)
     return null

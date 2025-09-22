@@ -13,7 +13,7 @@ export const getAllOrder = async (): Promise<Order[]> => {
   }
 }
 
-export const getOrderById = async (orderId: number): Promise<Order> => {
+export const getOrderById = async (orderId: string): Promise<Order> => {
   try {
     const response = await api.get(`${BASE_ORDER}/${orderId}`)
     return response.data
@@ -23,7 +23,7 @@ export const getOrderById = async (orderId: number): Promise<Order> => {
   }
 }
 
-export const deleteOrderById = async (orderId: number): Promise<Order> => {
+export const deleteOrderById = async (orderId: string): Promise<Order> => {
   try {
     const response = await api.delete(`${BASE_ORDER}/${orderId}`)
     return response.data
@@ -34,7 +34,7 @@ export const deleteOrderById = async (orderId: number): Promise<Order> => {
 }
 
 // upload slip
-export const uploadOrderSlip = async (orderId: number): Promise<Order> => {
+export const uploadOrderSlip = async (orderId: string): Promise<Order> => {
   try {
     const response = await api.post(`${BASE_ORDER}/${orderId}/upload-slip`)
     return response.data

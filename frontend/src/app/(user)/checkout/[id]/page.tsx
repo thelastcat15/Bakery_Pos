@@ -3,30 +3,18 @@ import { PrimaryButton } from "@/components/common/Button"
 import { UseCart } from "@/hooks/useCart"
 import { useOrders } from "@/hooks/useOrders"
 import { useUser } from "@/hooks/useUser"
-import { useRouter } from "next/navigation"
+import { Order } from "@/types/order_type"
+import { useRouter, useParams } from "next/navigation"
 import { useEffect, useState } from "react"
 
-const mockCartItems = [
-  {
-    id: 1,
-    name: "Chocolate Cake",
-    image: "/images/products/cake.jpg",
-    price: 120,
-    quantity: 2,
-  },
-  {
-    id: 3,
-    name: "Croissant",
-    image: "/images/products/croissant.jpg",
-    price: 45,
-    quantity: 3,
-  },
-]
+
 
 const CheckoutPage = () => {
   const router = useRouter()
-  const { cartItems, getTotalPrice, clearCart } = UseCart()
-  const { createOrder } = useOrders()
+  const params = useParams()
+  const orderId = params.id as string
+  const [order, setOrder] = useState<Order>()
+  const { getOrderById } = useOrders()
   const { user, isProfileComplete, isLoaded: userLoaded } = useUser()
 
   const [paymentSlip, setPaymentSlip] = useState<File | null>(null)
@@ -37,8 +25,6 @@ const CheckoutPage = () => {
     phone: "",
     address: "",
   })
-
-  const totalAmount = getTotalPrice()
 
   useEffect(() => {
     if (user) {
@@ -51,8 +37,17 @@ const CheckoutPage = () => {
   }, [user])
 
   useEffect(() => {
-    if (userLoaded && user && !isProfileComplete) {
-      setShowEditProfile(true)
+    if (userLoaded && user) {
+      if (!isProfileComplete) {
+        setShowEditProfile(true)
+      }
+      if (orderId && !order) {
+        const fetchOrder = async () => {
+          const data = await getOrderById(orderId)
+          setOrder(data)
+        }
+        fetchOrder()
+      }
     }
   }, [userLoaded, user, isProfileComplete])
 
@@ -84,7 +79,7 @@ const CheckoutPage = () => {
       return
     }
 
-    if (cartItems.length === 0) {
+    if (order && order.items.length === 0) {
       alert("ไม่มีตะกร้าสินค้า")
       return
     }
@@ -92,16 +87,11 @@ const CheckoutPage = () => {
     setIsSubmitting(true)
 
     try {
-      // Create order from cart items
       const customerInfo = {
         name: editingInfo.name,
         phone: editingInfo.phone,
         address: editingInfo.address,
       }
-
-      const orderId = createOrder(cartItems, customerInfo, paymentSlip)
-
-      clearCart()
 
       alert(
         `สั่งซื้อสำเร็จ! หมายเลขคำสั่งซื้อ: ${orderId}\nคำสั่งซื้อของคุณอยู่ในระหว่างการตรวจสอบ`
@@ -120,22 +110,22 @@ const CheckoutPage = () => {
     <div className="max-w-4xl mx-auto px-4">
       <h1 className="text-xl md:text-2xl font-bold mb-6">ชำระเงิน</h1>
 
-      {!userLoaded ? (
+      {!userLoaded && !user ? (
         <div className="bg-white rounded-2xl p-8 text-center">
           <p className="text-gray-500 mb-4">
             กรุณาเข้าสู่ระบบก่อนทำการสั่งซื้อ
           </p>
           <PrimaryButton href="/login">เข้าสู่ระบบ</PrimaryButton>
         </div>
-      ) : (
+      ) : (order && (
         <div className="grid md:grid-cols-2 gap-6">
           {/* Order summary */}
           <div className="bg-white rounded-2xl p-4 md:p-6">
             <h2 className="text-lg font-semibold mb-4">สรุปคำสั่งซื้อ</h2>
             <div className="space-y-3 mb-4">
-              {cartItems.map((item) => (
+              {order.items.map((item) => (
                 <div
-                  key={item.id}
+                  key={item.productID}
                   className="flex justify-between items-center">
                   <div>
                     <p className="font-bold">{item.name}</p>
@@ -153,7 +143,7 @@ const CheckoutPage = () => {
             <hr className="my-4" />
             <div className="flex justify-between items-center text-lg font-bold text-amber-500">
               <span>ยอดรวมทั้งหมด</span>
-              <span>฿{totalAmount.toLocaleString()}</span>
+              <span>฿{order.total.toLocaleString()}</span>
             </div>
           </div>
 
@@ -270,7 +260,7 @@ const CheckoutPage = () => {
                     <strong>ชื่อบัญชี:</strong> Sweet Heaven
                   </p>
                   <p>
-                    <strong>จำนวนเงิน:</strong> ฿{totalAmount.toLocaleString()}
+                    <strong>จำนวนเงิน:</strong> ฿{order.total.toLocaleString()}
                   </p>
                 </div>
 
@@ -329,7 +319,7 @@ const CheckoutPage = () => {
               </div>
 
               {/* Submit button */}
-              {cartItems.length > 0 ? (
+              {order.items.length > 0 ? (
                 <PrimaryButton
                   onClick={handleSubmitOrder}
                   disabled={isSubmitting || !isProfileComplete || !paymentSlip}
@@ -344,7 +334,7 @@ const CheckoutPage = () => {
             </div>
           </div>
         </div>
-      )}
+      ))}
     </div>
   )
 }
