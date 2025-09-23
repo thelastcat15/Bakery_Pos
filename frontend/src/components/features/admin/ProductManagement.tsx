@@ -2,12 +2,16 @@
 
 import {
   createProduct,
+  deleteImagesById,
   deleteProduct,
   getAllProducts,
   getImagesById,
   getNearlyOutStockProducts,
+  updateProduct,
   uploadImage,
+  uploadImageProduct,
 } from "@/services/product_service"
+import { Image } from "@/types/image_type"
 import { Product } from "@/types/product_type"
 import { use, useEffect, useState } from "react"
 
@@ -68,7 +72,6 @@ const ProductManagement = () => {
       reader.onload = (e) => {
         const result = e.target?.result as string
         setEditImagePreview(result)
-        handleUpdateProduct(productId, "images", result)
       }
       reader.readAsDataURL(file)
       setEditImageFile(file)
@@ -139,7 +142,7 @@ const ProductManagement = () => {
   const handleUpdateProduct = (
     productId: number | undefined,
     field: keyof Product,
-    value: string | number
+    value: string | number | Image[]
   ) => {
     if (!productId) return
 
@@ -165,7 +168,22 @@ const ProductManagement = () => {
     try {
       const productToUpdate = products.find((p) => p.id === productId)
       if (productToUpdate) {
-        // call api
+        await updateProduct(productId, productToUpdate)
+        if (editImageFile) {
+          try {
+            if (productToUpdate.images?.[0]?.id) {
+              await deleteImagesById(productId, productToUpdate.images[0].id);
+            }
+            const imageData = await uploadImageProduct(productId, editImageFile);
+
+            setEditImageFile(null);
+            setEditImagePreview("");
+
+            handleUpdateProduct(productId, "images", [imageData]);
+          } catch (error) {
+            console.error("Update image error:", error);
+          }
+        }
       }
       setEditingProduct(null)
     } catch (error) {

@@ -35,18 +35,17 @@ func main() {
 	app := fiber.New(fiber.Config{
 		StrictRouting: false,
 	})
-	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "http://localhost:3000,http://localhost:5000,https://silver-guacamole-p6xpxx5xg4ph7j4-3000.app.github.dev/",
-		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
-		AllowMethods:     "GET,POST,PUT,DELETE",
-		AllowCredentials: true,
-	}))
-
-	api := app.Group("/api")
-	api.Use(func(c *fiber.Ctx) error {
+	app.Use(func(c *fiber.Ctx) error {
 		log.Printf("Request: %s %s, IP: %s", c.Method(), c.OriginalURL(), c.IP())
 		return c.Next()
 	})
+	app.Use(cors.New(cors.Config{
+		AllowOrigins:     "http://127.0.0.1:3000,http://127.0.0.1:5000",
+		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
+		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
+		AllowCredentials: true,
+	}))
+	api := app.Group("/api")
 
 	user := api.Group("/user")
 	user.Post("/login", routes.LoginHandler)
@@ -63,7 +62,7 @@ func main() {
 	product_select.Delete("/", middleware.Auth, middleware.Admin, routes_admin.DeleteProduct)
 	product_select.Get("/images", middleware.AuthOptional, routes.GetImagesProduct)
 	product_select.Post("/images", middleware.Auth, middleware.Admin, routes_admin.UploadImagesProduct)
-	product_select.Delete("/images", middleware.Auth, middleware.Admin, routes_admin.DeleteImagesProduct)
+	product_select.Delete("/images", middleware.Auth, middleware.Admin, routes_admin.DeleteImagesByID)
 
 	cart := api.Group("/cart", middleware.Auth)
 	cart.Get("/", routes.GetCart)

@@ -8,7 +8,7 @@ import (
 
 type Product struct {
 	gorm.Model
-	Name        string      `json:"name" gorm:"type:varchar(255);not null"`
+	Name        string      `json:"name" gorm:"unique;type:varchar(255);not null"`
 	Description string      `json:"description" gorm:"type:text"`
 	Tag         string      `json:"tag" gorm:"not null"`
 	Price       float64     `json:"price" gorm:"not null"`
@@ -23,7 +23,6 @@ type Image struct {
 	ProductID uint
 	FilePath  string
 	PublicURL *string
-	Order     int
 }
 
 type Promotion struct {

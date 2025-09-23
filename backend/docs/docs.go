@@ -233,7 +233,7 @@ const docTemplate = `{
         },
         "/products": {
             "get": {
-                "description": "Retrieve all products with their images",
+                "description": "Retrieve all products with optional filters",
                 "consumes": [
                     "application/json"
                 ],
@@ -244,6 +244,26 @@ const docTemplate = `{
                     "product"
                 ],
                 "summary": "Get all products",
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "description": "Filter products with stock \u003c 10",
+                        "name": "lowStock",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of products per page (default 20)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number (default 1)",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -257,7 +277,7 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "description": "Add a new product to the database",
+                "description": "Add a new product to the database. Optionally, use ?images_amount to create image rows and get upload URLs.",
                 "consumes": [
                     "application/json"
                 ],
@@ -277,6 +297,12 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/models.BodyProductRequest"
                         }
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of images to create and get upload URLs for",
+                        "name": "images_amount",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -413,7 +439,7 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "description": "Generate signed URLs for uploading multiple images and store them in the database",
+                "description": "Delete all old images, then generate signed URLs for uploading new images and store them in the database. Use ?image_amount to specify the number of images.",
                 "consumes": [
                     "application/json"
                 ],
@@ -423,7 +449,7 @@ const docTemplate = `{
                 "tags": [
                     "product-images"
                 ],
-                "summary": "Upload multiple images for a product",
+                "summary": "Upload multiple images for a product (replace all)",
                 "parameters": [
                     {
                         "type": "integer",
@@ -433,13 +459,11 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "Images data",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.ImagesRequest"
-                        }
+                        "type": "integer",
+                        "description": "Number of images to create and get upload URLs for",
+                        "name": "image_amount",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -452,7 +476,7 @@ const docTemplate = `{
                 }
             },
             "delete": {
-                "description": "Remove images from storage and database",
+                "description": "Remove images from storage and database by their IDs",
                 "consumes": [
                     "application/json"
                 ],
@@ -462,22 +486,15 @@ const docTemplate = `{
                 "tags": [
                     "product-images"
                 ],
-                "summary": "Delete one or multiple images for a product",
+                "summary": "Delete images by IDs",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "Product ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Image IDs",
+                        "description": "IDs of images to delete",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.ImagesRequest"
+                            "$ref": "#/definitions/models.ImageIDsRequest"
                         }
                     }
                 ],
@@ -486,6 +503,124 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/models.MessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/reports/products/top": {
+            "get": {
+                "description": "Get top N selling products for a given period",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reports"
+                ],
+                "summary": "Get top selling products",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "week",
+                        "description": "Period (day|week|month)",
+                        "name": "period",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 5,
+                        "description": "Number of products",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.TopProductReport"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reports/sales/daily": {
+            "get": {
+                "description": "Get sales aggregated by day for a date range",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reports"
+                ],
+                "summary": "Get sales by day",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start date in format YYYY-MM-DD",
+                        "name": "start",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date in format YYYY-MM-DD",
+                        "name": "end",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.SalesByDayReport"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reports/sales/hourly": {
+            "get": {
+                "description": "Get sales aggregated by hour for a specific date (default: today)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reports"
+                ],
+                "summary": "Get sales by hour",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Date in format YYYY-MM-DD (default: today)",
+                        "name": "date",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.SalesByHourReport"
+                            }
                         }
                     }
                 }
@@ -603,7 +738,10 @@ const docTemplate = `{
         "models.BodyProductRequest": {
             "type": "object",
             "properties": {
-                "description": {
+                "category": {
+                    "type": "string"
+                },
+                "detail": {
                     "type": "string"
                 },
                 "is_active": {
@@ -617,23 +755,26 @@ const docTemplate = `{
                 },
                 "quantity": {
                     "type": "integer"
-                },
-                "tag": {
-                    "type": "string"
                 }
             }
         },
         "models.CartItemResponse": {
             "type": "object",
             "properties": {
-                "price": {
-                    "type": "number"
-                },
-                "product_id": {
+                "id": {
                     "type": "integer"
                 },
-                "product_name": {
+                "images": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.ImageResponse"
+                    }
+                },
+                "name": {
                     "type": "string"
+                },
+                "price": {
+                    "type": "number"
                 },
                 "quantity": {
                     "type": "integer"
@@ -650,7 +791,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "order_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "status": {
                     "type": "string"
@@ -690,16 +831,21 @@ const docTemplate = `{
                 }
             }
         },
+        "models.ImageIDsRequest": {
+            "type": "object",
+            "properties": {
+                "ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
         "models.ImageResponse": {
             "type": "object",
             "properties": {
-                "file_name": {
-                    "type": "string"
-                },
                 "id": {
-                    "type": "integer"
-                },
-                "order": {
                     "type": "integer"
                 },
                 "public_url": {
@@ -721,22 +867,6 @@ const docTemplate = `{
                 }
             }
         },
-        "models.ImagesRequest": {
-            "type": "object",
-            "properties": {
-                "images": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "order": {
-                                "type": "integer"
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "models.MessageResponse": {
             "type": "object",
             "properties": {
@@ -751,6 +881,9 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
+                "id": {
+                    "type": "integer"
+                },
                 "imageURL": {
                     "type": "string"
                 },
@@ -758,7 +891,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "orderID": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "price": {
                     "type": "number",
@@ -785,13 +918,19 @@ const docTemplate = `{
                     }
                 },
                 "order_id": {
-                    "type": "integer"
+                    "type": "string"
+                },
+                "public_url": {
+                    "type": "string"
                 },
                 "status": {
                     "type": "string"
                 },
                 "total": {
                     "type": "number"
+                },
+                "upload_url": {
+                    "type": "string"
                 }
             }
         },
@@ -827,6 +966,51 @@ const docTemplate = `{
                 }
             }
         },
+        "models.SalesByDayReport": {
+            "type": "object",
+            "properties": {
+                "date": {
+                    "type": "string"
+                },
+                "orders": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "number"
+                }
+            }
+        },
+        "models.SalesByHourReport": {
+            "type": "object",
+            "properties": {
+                "hour": {
+                    "type": "string"
+                },
+                "orders": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "number"
+                }
+            }
+        },
+        "models.TopProductReport": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "product_id": {
+                    "type": "integer"
+                },
+                "revenue": {
+                    "type": "number"
+                },
+                "total_sold": {
+                    "type": "integer"
+                }
+            }
+        },
         "models.UploadOrderSlipResponse": {
             "type": "object",
             "properties": {
@@ -841,13 +1025,16 @@ const docTemplate = `{
         "models.UserResponse": {
             "type": "object",
             "properties": {
+                "address": {
+                    "type": "string"
+                },
                 "exp": {
                     "type": "integer"
                 },
-                "phone_number": {
+                "name": {
                     "type": "string"
                 },
-                "place": {
+                "phone": {
                     "type": "string"
                 },
                 "role": {

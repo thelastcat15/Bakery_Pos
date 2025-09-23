@@ -1,7 +1,7 @@
 "use client"
 import { PrimaryButton } from "@/components/common/Button"
 import { CartList } from "@/components/common/List"
-import { UseCart } from "@/hooks/useCart"
+import { UseCart } from "@/context/CartContext"
 import { usePromotions } from "@/hooks/usePromotions"
 import { checkout } from "@/services/cart_service"
 import { useRouter } from "next/navigation";

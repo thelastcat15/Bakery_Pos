@@ -1,9 +1,9 @@
 import { Product } from "@/types/product_type"
 import Image from "next/image"
 import { CartButton, DecreaseButton, IncreaseButton } from "./Button"
-import { UseCart } from "@/hooks/useCart"
 import { Order } from "@/types/order_type"
 import { usePromotions } from "@/hooks/usePromotions"
+import { useCart } from "@/context/CartContext"
 
 interface CardProductProps {
   product: Product
@@ -23,7 +23,7 @@ interface CardCartProps {
 }
 
 export const CardProduct = ({ product }: CardProductProps) => {
-  const { addToCart, getItemQuantity } = UseCart()
+  const { addToCart, getItemQuantity } = useCart();
   const { getPriceDisplay } = usePromotions()
   const itemQuantity = getItemQuantity(product.id!!)
   const priceInfo = getPriceDisplay(product)
@@ -35,14 +35,16 @@ export const CardProduct = ({ product }: CardProductProps) => {
   return (
     <div className="bg-white rounded-2xl shadow-md hover:shadow-xl hover:-translate-y-2 transition-all duration-300 overflow-hidden flex flex-col">
       <figure className="relative w-full h-40 md:h-56">
-        {product.images!![0]?.public_url && (
-          <Image
-            src={product.images!![0]?.public_url}
-            alt={product.name}
-            fill
-            className="object-cover hover:shadow-xl hover:scale-[1.02] transition-all duration-300"
-          />
-        )}
+        <Image
+          src={
+            product.images?.[0]?.public_url
+              ? product.images[0].public_url
+              : "https://zarkrqyamscgfmxrqafp.supabase.co/storage/v1/object/public/product-images/products/default.jpg"
+          }
+          alt={product.name}
+          fill
+          className="object-cover hover:shadow-xl hover:scale-[1.02] transition-all duration-300"
+        />
       </figure>
       {/* Discount badge */}
       {priceInfo.hasDiscount && (

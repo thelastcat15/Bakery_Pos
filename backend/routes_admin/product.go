@@ -68,7 +68,6 @@ func CreateProduct(c *fiber.Ctx) error {
 				ProductID: product.ID,
 				FilePath:  filePath,
 				PublicURL: &publicURL,
-				Order:     i,
 			}
 			if err := db.DB.Create(&image).Error; err != nil {
 				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
@@ -166,7 +165,6 @@ func UploadImagesProduct(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid product ID"})
 	}
 
-	// Parse image_amount query
 	imageAmountStr := c.Query("image_amount", "0")
 	imageAmount, err := strconv.Atoi(imageAmountStr)
 	if err != nil || imageAmount < 0 {
@@ -178,7 +176,6 @@ func UploadImagesProduct(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Product not found"})
 	}
 
-	// Delete all old images for this product
 	if err := db.DB.Where("product_id = ?", productID).Delete(&models.Image{}).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to delete old images"})
 	}
@@ -196,7 +193,6 @@ func UploadImagesProduct(c *fiber.Ctx) error {
 			ProductID: product.ID,
 			FilePath:  filePath,
 			PublicURL: &publicURL,
-			Order:     i,
 		}
 		if err := db.DB.Create(&image).Error; err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
@@ -212,35 +208,32 @@ func UploadImagesProduct(c *fiber.Ctx) error {
 }
 
 // DeleteImagesProduct godoc
-// @Summary Delete one or multiple images for a product
-// @Description Remove images from storage and database
+// @Summary Delete images by IDs
+// @Description Remove images from storage and database by their IDs
 // @Tags product-images
 // @Accept json
 // @Produce json
-// @Param id path int true "Product ID"
-// @Param request body models.ImagesRequest true "Image Orders to delete"
+// @Param request body models.ImageIDsRequest true "IDs of images to delete"
 // @Success 200 {object} models.MessageResponse
 // @Router /products/{id}/images [delete]
-func DeleteImagesProduct(c *fiber.Ctx) error {
+func DeleteImagesByID(c *fiber.Ctx) error {
 	idStr := c.Params("id")
 	productID, err := strconv.Atoi(idStr)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid product ID"})
 	}
 
-	var body models.ImagesRequest
+	var body models.ImageIDsRequest
 	if err := c.BodyParser(&body); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request payload"})
 	}
 
-	if len(body.Orders) == 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "No image orders provided"})
+	if len(body.IDs) == 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "No image IDs provided"})
 	}
 
-	orders := body.Orders
-
 	var images []models.Image
-	if err := db.DB.Where("product_id = ? AND `order` IN ?", productID, orders).Find(&images).Error; err != nil {
+	if err := db.DB.Where("product_id = ? && id IN ?", productID, body.IDs).Find(&images).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 
@@ -254,7 +247,7 @@ func DeleteImagesProduct(c *fiber.Ctx) error {
 		}
 	}
 
-	if err := db.DB.Where("product_id = ? AND `order` IN ?", productID, orders).Delete(&models.Image{}).Error; err != nil {
+	if err := db.DB.Where("id IN ?", body.IDs).Delete(&models.Image{}).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 

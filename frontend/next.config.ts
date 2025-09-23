@@ -4,7 +4,10 @@ import type { NextConfig } from "next"
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ['zarkrqyamscgfmxrqafp.supabase.co'],
+    domains: [
+      '127.0.0.1',
+      'zarkrqyamscgfmxrqafp.supabase.co'
+    ],
   },
 }
 

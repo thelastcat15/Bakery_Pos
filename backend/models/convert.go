@@ -14,7 +14,7 @@ func (user *User) ToResponse() UserResponse {
 
 func (img *Image) ToResponse() ImageResponse {
 	resp := ImageResponse{
-		Order: img.Order,
+		ID: img.ID,
 	}
 
 	if img.PublicURL != nil && *img.PublicURL != "" {
@@ -59,12 +59,9 @@ func (c *Cart) ToResponse() []CartItemResponse {
 			continue
 		}
 
-		var images []ImageResponse
-		for _, img := range item.Product.Images {
-			images = append(images, ImageResponse{
-				PublicURL: img.PublicURL,
-				Order:     img.Order,
-			})
+		images := make([]ImageResponse, len(item.Product.Images))
+		for i, img := range item.Product.Images {
+			images[i] = img.ToResponse()
 		}
 
 		items = append(items, CartItemResponse{

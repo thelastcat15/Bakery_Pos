@@ -32,9 +32,9 @@ export const getNearlyOutStockProducts = async (): Promise<Product[]> => {
   }
 }
 
-export const updateProduct = async (productId: number): Promise<Product> => {
+export const updateProduct = async (productId: number, newProduct: Product): Promise<Product> => {
   try {
-    const response = await api.put<Product>(`${BASE_PRODUCT}/${productId}`)
+    const response = await api.put<Product>(`${BASE_PRODUCT}/${productId}`, newProduct)
     return response.data
   } catch (error) {
     console.error("Update product error:", error)
@@ -53,21 +53,14 @@ export const deleteProduct = async (productId: number) => {
 
 export const uploadImageProduct = async (productId: number, file: File) => {
   try {
-    const response1 = await api.post(`${BASE_PRODUCT}/${productId}/images`, {
-      images: [
-        {
-          order: 1,
-        },
-      ],
-    })
-
-    await uploadImage(file, response1.data.images[0].upload_url)
-    return response1.data.images[0]
+    const response = await api.post(`${BASE_PRODUCT}/${productId}/images?image_amount=1`);
+    await uploadImage(file, response.data.images[0].upload_url);
+    return response.data.images[0];
   } catch (error) {
-    console.error("Upload image of product error:", error)
-    throw error
+    console.error("Upload image of product error:", error);
+    throw error;
   }
-}
+};
 
 export const uploadImage = async (file: File, uploadUrl: string) => {
   try {
@@ -81,6 +74,18 @@ export const uploadImage = async (file: File, uploadUrl: string) => {
     console.log("Upload success:", response.status)
   } catch (error) {
     console.error("Upload failed:", error)
+  }
+}
+
+export const deleteImagesById = async (productId: number, imageID: number) => {
+  try {
+    await api.delete(`${BASE_PRODUCT}/${productId}/images`, {
+      data: { ids: [imageID] },
+    })
+    console.log("Delete success")
+  } catch (error) {
+    console.error("Delete failed")
+    throw error
   }
 }
 

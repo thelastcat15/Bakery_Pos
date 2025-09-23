@@ -34,9 +34,9 @@ type ImagesArrayResponse struct {
 }
 
 type ImageResponse struct {
+	ID        uint    `json:"id"`
 	PublicURL *string `json:"public_url,omitempty"`
 	UploadURL *string `json:"upload_url,omitempty"`
-	Order     int     `json:"order"`
 }
 
 type CartItemResponse struct {

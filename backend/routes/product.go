@@ -29,7 +29,7 @@ func GetProducts(c *fiber.Ctx) error {
 	page := c.QueryInt("page", 1)
 
 	// db query
-	query := db.DB.Preload("Images")
+	query := db.DB.Preload("Images").Order("updated_at DESC")
 	if lowStock {
 		query = query.Where("stock < ?", 10)
 	}

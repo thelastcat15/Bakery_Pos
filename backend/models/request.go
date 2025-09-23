@@ -22,6 +22,6 @@ type BodyProductRequest struct {
 	Stock       int     `json:"quantity" gorm:"not null"`
 	IsActive    bool    `json:"is_active" gorm:"default:true"`
 }
-type ImagesRequest struct {
-	Orders []int `json:"orders"`
+type ImageIDsRequest struct {
+	IDs []uint `json:"ids"`
 }

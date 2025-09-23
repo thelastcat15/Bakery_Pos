@@ -1,10 +1,10 @@
 "use client"
-import { UseCart } from "@/hooks/useCart"
+import { useCart } from "@/context/CartContext"
 import Link from "next/link"
 import { useState } from "react"
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false)
-  const { getTotalItems } = UseCart()
+  const { getTotalItems } = useCart()
   const totalItems = getTotalItems()
 
   return (

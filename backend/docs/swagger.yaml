@@ -2,7 +2,9 @@ basePath: /api
 definitions:
   models.BodyProductRequest:
     properties:
-      description:
+      category:
+        type: string
+      detail:
         type: string
       is_active:
         type: boolean
@@ -12,17 +14,19 @@ definitions:
         type: number
       quantity:
         type: integer
-      tag:
-        type: string
     type: object
   models.CartItemResponse:
     properties:
+      id:
+        type: integer
+      images:
+        items:
+          $ref: '#/definitions/models.ImageResponse'
+        type: array
+      name:
+        type: string
       price:
         type: number
-      product_id:
-        type: integer
-      product_name:
-        type: string
       quantity:
         type: integer
       sale_price:
@@ -33,7 +37,7 @@ definitions:
       message:
         type: string
       order_id:
-        type: integer
+        type: string
       status:
         type: string
       total:
@@ -58,13 +62,16 @@ definitions:
       place:
         type: string
     type: object
+  models.ImageIDsRequest:
+    properties:
+      ids:
+        items:
+          type: integer
+        type: array
+    type: object
   models.ImageResponse:
     properties:
-      file_name:
-        type: string
       id:
-        type: integer
-      order:
         type: integer
       public_url:
         type: string
@@ -78,16 +85,6 @@ definitions:
           $ref: '#/definitions/models.ImageResponse'
         type: array
     type: object
-  models.ImagesRequest:
-    properties:
-      images:
-        items:
-          properties:
-            order:
-              type: integer
-          type: object
-        type: array
-    type: object
   models.MessageResponse:
     properties:
       message:
@@ -97,12 +94,14 @@ definitions:
     properties:
       description:
         type: string
+      id:
+        type: integer
       imageURL:
         type: string
       name:
         type: string
       orderID:
-        type: integer
+        type: string
       price:
         format: float64
         type: number
@@ -120,11 +119,15 @@ definitions:
           $ref: '#/definitions/models.OrderItem'
         type: array
       order_id:
-        type: integer
+        type: string
+      public_url:
+        type: string
       status:
         type: string
       total:
         type: number
+      upload_url:
+        type: string
     type: object
   models.ProductResponse:
     properties:
@@ -147,6 +150,35 @@ definitions:
       quantity:
         type: integer
     type: object
+  models.SalesByDayReport:
+    properties:
+      date:
+        type: string
+      orders:
+        type: integer
+      total:
+        type: number
+    type: object
+  models.SalesByHourReport:
+    properties:
+      hour:
+        type: string
+      orders:
+        type: integer
+      total:
+        type: number
+    type: object
+  models.TopProductReport:
+    properties:
+      name:
+        type: string
+      product_id:
+        type: integer
+      revenue:
+        type: number
+      total_sold:
+        type: integer
+    type: object
   models.UploadOrderSlipResponse:
     properties:
       public_url:
@@ -156,11 +188,13 @@ definitions:
     type: object
   models.UserResponse:
     properties:
+      address:
+        type: string
       exp:
         type: integer
-      phone_number:
+      name:
         type: string
-      place:
+      phone:
         type: string
       role:
         type: string
@@ -323,7 +357,20 @@ paths:
     get:
       consumes:
       - application/json
-      description: Retrieve all products with their images
+      description: Retrieve all products with optional filters
+      parameters:
+      - description: Filter products with stock < 10
+        in: query
+        name: lowStock
+        type: boolean
+      - description: Number of products per page (default 20)
+        in: query
+        name: limit
+        type: integer
+      - description: Page number (default 1)
+        in: query
+        name: page
+        type: integer
       produces:
       - application/json
       responses:
@@ -339,7 +386,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Add a new product to the database
+      description: Add a new product to the database. Optionally, use ?images_amount
+        to create image rows and get upload URLs.
       parameters:
       - description: Product data
         in: body
@@ -347,6 +395,10 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/models.BodyProductRequest'
+      - description: Number of images to create and get upload URLs for
+        in: query
+        name: images_amount
+        type: integer
       produces:
       - application/json
       responses:
@@ -422,19 +474,14 @@ paths:
     delete:
       consumes:
       - application/json
-      description: Remove images from storage and database
+      description: Remove images from storage and database by their IDs
       parameters:
-      - description: Product ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Image IDs
+      - description: IDs of images to delete
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/models.ImagesRequest'
+          $ref: '#/definitions/models.ImageIDsRequest'
       produces:
       - application/json
       responses:
@@ -442,7 +489,7 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/models.MessageResponse'
-      summary: Delete one or multiple images for a product
+      summary: Delete images by IDs
       tags:
       - product-images
     get:
@@ -468,20 +515,20 @@ paths:
     post:
       consumes:
       - application/json
-      description: Generate signed URLs for uploading multiple images and store them
-        in the database
+      description: Delete all old images, then generate signed URLs for uploading
+        new images and store them in the database. Use ?image_amount to specify the
+        number of images.
       parameters:
       - description: Product ID
         in: path
         name: id
         required: true
         type: integer
-      - description: Images data
-        in: body
-        name: request
+      - description: Number of images to create and get upload URLs for
+        in: query
+        name: image_amount
         required: true
-        schema:
-          $ref: '#/definitions/models.ImagesRequest'
+        type: integer
       produces:
       - application/json
       responses:
@@ -489,9 +536,87 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/models.ImagesArrayResponse'
-      summary: Upload multiple images for a product
+      summary: Upload multiple images for a product (replace all)
       tags:
       - product-images
+  /reports/products/top:
+    get:
+      consumes:
+      - application/json
+      description: Get top N selling products for a given period
+      parameters:
+      - default: week
+        description: Period (day|week|month)
+        in: query
+        name: period
+        type: string
+      - default: 5
+        description: Number of products
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.TopProductReport'
+            type: array
+      summary: Get top selling products
+      tags:
+      - reports
+  /reports/sales/daily:
+    get:
+      consumes:
+      - application/json
+      description: Get sales aggregated by day for a date range
+      parameters:
+      - description: Start date in format YYYY-MM-DD
+        in: query
+        name: start
+        required: true
+        type: string
+      - description: End date in format YYYY-MM-DD
+        in: query
+        name: end
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.SalesByDayReport'
+            type: array
+      summary: Get sales by day
+      tags:
+      - reports
+  /reports/sales/hourly:
+    get:
+      consumes:
+      - application/json
+      description: 'Get sales aggregated by hour for a specific date (default: today)'
+      parameters:
+      - description: 'Date in format YYYY-MM-DD (default: today)'
+        in: query
+        name: date
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.SalesByHourReport'
+            type: array
+      summary: Get sales by hour
+      tags:
+      - reports
   /user/login:
     post:
       consumes:

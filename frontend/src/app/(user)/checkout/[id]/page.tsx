@@ -1,6 +1,6 @@
 "use client"
 import { PrimaryButton } from "@/components/common/Button"
-import { UseCart } from "@/hooks/useCart"
+import { UseCart } from "@/context/CartContext"
 import { useOrders } from "@/hooks/useOrders"
 import { useUser } from "@/hooks/useUser"
 import { Order } from "@/types/order_type"
