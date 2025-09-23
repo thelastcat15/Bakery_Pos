@@ -55,14 +55,26 @@ func GetOrderByID(c *fiber.Ctx) error {
 
 	orderID := c.Params("order_id")
 	var order models.Order
-	if err := db.DB.Preload("items").Where("id = ? AND user_id = ?", orderID, userID).First(&order).Error; err != nil {
+	if err := db.DB.Preload("Items").Where("id = ? AND user_id = ?", orderID, userID).First(&order).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Order not found"})
 		}
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch order"})
 	}
 
-	return c.Status(fiber.StatusOK).JSON(order.ToResponse())
+	fileName := fmt.Sprintf("order-%s-slip.png", order.ID)
+	filePath := fmt.Sprintf("orders/%s/%s", order.ID, fileName)
+
+	signedURL, publicURL, err := db.Storage.GenerateUploadURL("order-slips", filePath)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	resp := order.ToResponse()
+	resp.UploadURL = &signedURL
+	resp.PublicURL = &publicURL
+
+	return c.Status(fiber.StatusOK).JSON(resp)
 }
 
 // GenerateOrderSlipURL godoc

@@ -166,3 +166,5 @@ export const useCart = () => {
   if (!context) throw new Error("useCart must be used within CartProvider");
   return context;
 };
+
+export const DefaultImage = "https://zarkrqyamscgfmxrqafp.supabase.co/storage/v1/object/public/product-images/products/default.jpg";

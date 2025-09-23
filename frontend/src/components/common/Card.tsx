@@ -3,7 +3,7 @@ import Image from "next/image"
 import { CartButton, DecreaseButton, IncreaseButton } from "./Button"
 import { Order } from "@/types/order_type"
 import { usePromotions } from "@/hooks/usePromotions"
-import { useCart } from "@/context/CartContext"
+import { DefaultImage, useCart } from "@/context/CartContext"
 
 interface CardProductProps {
   product: Product
@@ -39,7 +39,7 @@ export const CardProduct = ({ product }: CardProductProps) => {
           src={
             product.images?.[0]?.public_url
               ? product.images[0].public_url
-              : "https://zarkrqyamscgfmxrqafp.supabase.co/storage/v1/object/public/product-images/products/default.jpg"
+              : DefaultImage
           }
           alt={product.name}
           fill
@@ -111,7 +111,7 @@ export const CardCart = ({
       <div className="flex items-center gap-4">
         <figure className="relative h-18 w-18 md:h-20 md:w-20">
           <Image
-            src={product.images ? product.images[0].public_url!! : ""}
+            src={product.images ? product.images[0].public_url!! : DefaultImage}
             alt={product.name}
             fill
             className="object-cover p-1 rounded-lg"

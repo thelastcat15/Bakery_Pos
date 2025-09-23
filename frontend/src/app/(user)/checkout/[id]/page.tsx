@@ -1,6 +1,5 @@
 "use client"
 import { PrimaryButton } from "@/components/common/Button"
-import { UseCart } from "@/context/CartContext"
 import { useOrders } from "@/hooks/useOrders"
 import { useUser } from "@/hooks/useUser"
 import { Order } from "@/types/order_type"
@@ -125,7 +124,7 @@ const CheckoutPage = () => {
             <div className="space-y-3 mb-4">
               {order.items.map((item) => (
                 <div
-                  key={item.productID}
+                  key={item.product_id}
                   className="flex justify-between items-center">
                   <div>
                     <p className="font-bold">{item.name}</p>

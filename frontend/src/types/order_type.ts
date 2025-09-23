@@ -7,15 +7,14 @@ export interface CustomerInfo {
 }
 
 export interface OrderItem {
-  orderID: string
-  productID: number
+  order_id: string
+  product_id: number
   quantity: number
 
   name: string
   description: string
   tag: string
   price: number
-  imageURL: string
 }
 
 export interface Order {

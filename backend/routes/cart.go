@@ -212,7 +212,11 @@ func Checkout(c *fiber.Ctx) error {
 			OrderID:   order.ID,
 			ProductID: item.ProductID,
 			Quantity:  item.Quantity,
-			Price:     price,
+
+			Name:        item.Product.Name,
+			Description: item.Product.Description,
+			Tag:         item.Product.Tag,
+			Price:       price,
 		}
 
 		if err := tx.Create(&orderItem).Error; err != nil {

@@ -21,16 +21,15 @@ type Order struct {
 }
 
 type OrderItem struct {
-	ID        uint   `gorm:"primaryKey;autoIncrement"`
-	OrderID   string `gorm:"not null;index"`
-	ProductID uint   `gorm:"not null;index:idx_order_product,unique"`
-	Quantity  int    `gorm:"not null"`
+	ID        uint   `gorm:"primaryKey;autoIncrement" json:"id"`
+	OrderID   string `gorm:"not null;index:idx_order_product,unique" json:"order_id"`
+	ProductID uint   `gorm:"not null;index:idx_order_product,unique" json:"product_id"`
+	Quantity  int    `gorm:"not null" json:"quantity"`
 
-	Name        string
-	Description string
-	Tag         string
-	Price       float64
-	ImageURL    string
+	Name        string  `json:"name"`
+	Description string  `json:"description"`
+	Tag         string  `json:"tag"`
+	Price       float64 `json:"price"`
 }
 
 func (o *Order) BeforeCreate(tx *gorm.DB) (err error) {
