@@ -40,11 +40,12 @@ func main() {
 		return c.Next()
 	})
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "http://127.0.0.1:3000,http://127.0.0.1:5000",
+		AllowOrigins:     "http://127.0.0.1:3000, http://127.0.0.1:5000, https://*.github.dev",
 		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
 		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
 		AllowCredentials: true,
 	}))
+
 	api := app.Group("/api")
 
 	user := api.Group("/user")
