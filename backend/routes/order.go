@@ -62,8 +62,7 @@ func GetOrderByID(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch order"})
 	}
 
-	fileName := fmt.Sprintf("order-%s-slip.png", order.ID)
-	filePath := fmt.Sprintf("orders/%s/%s", order.ID, fileName)
+	filePath := fmt.Sprintf("orders/%s/%s", order.ID, "slip.png")
 
 	signedURL, publicURL, err := db.Storage.GenerateUploadURL("order-slips", filePath)
 	if err != nil {
@@ -100,8 +99,7 @@ func GenerateOrderSlipURL(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Order not found"})
 	}
 
-	fileName := fmt.Sprintf("order-%s-slip.png", order.ID)
-	filePath := fmt.Sprintf("orders/%s/%s", order.ID, fileName)
+	filePath := fmt.Sprintf("orders/%s/%s", order.ID, "slip.png")
 
 	signedURL, publicURL, err := db.Storage.GenerateUploadURL("order-slips", filePath)
 	if err != nil {

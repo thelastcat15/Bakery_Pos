@@ -1,5 +1,6 @@
 import { api } from "./api"
 import { Order } from "@/types/order_type"
+import { uploadImage } from "./product_service"
 
 const BASE_ORDER = "/order"
 
@@ -34,10 +35,10 @@ export const deleteOrderById = async (orderId: string): Promise<Order> => {
 }
 
 // upload slip
-export const uploadOrderSlip = async (orderId: string): Promise<Order> => {
+export const uploadOrderSlip = async (orderId: string, file: File) => {
   try {
     const response = await api.post(`${BASE_ORDER}/${orderId}/upload-slip`)
-    return response.data
+    await uploadImage(file, response.data.public_url)
   } catch (error) {
     console.error("Upload order slip error:", error)
     throw error

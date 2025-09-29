@@ -2,6 +2,7 @@
 import { PrimaryButton } from "@/components/common/Button"
 import { useOrders } from "@/hooks/useOrders"
 import { useUser } from "@/hooks/useUser"
+import { uploadOrderSlip } from "@/services/order_service"
 import { Order } from "@/types/order_type"
 import { useRouter, useParams } from "next/navigation"
 import { useEffect, useState } from "react"
@@ -68,33 +69,15 @@ const CheckoutPage = () => {
   }
 
   const handleSubmitOrder = async () => {
-    if (
-      !editingInfo.name ||
-      !editingInfo.phone ||
-      !editingInfo.address ||
-      !paymentSlip
-    ) {
-      alert("กรุณากรอกข้อมูลให้ครบถ้วนและแนบสลิปการโอนเงิน")
-      return
-    }
-
-    if (order && order.items.length === 0) {
-      alert("ไม่มีตะกร้าสินค้า")
+    if (!(paymentSlip && order && order.order_id)) {
+      alert("ไม่มีรายการสั่งซื้อ")
       return
     }
 
     setIsSubmitting(true)
 
     try {
-      const customerInfo = {
-        name: editingInfo.name,
-        phone: editingInfo.phone,
-        address: editingInfo.address,
-      }
-
-      alert(
-        `สั่งซื้อสำเร็จ! หมายเลขคำสั่งซื้อ: ${orderId}\nคำสั่งซื้อของคุณอยู่ในระหว่างการตรวจสอบ`
-      )
+      await uploadOrderSlip(order.order_id, paymentSlip)
 
       // redirect to tracking page
       router.push(`/tracking`)
