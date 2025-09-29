@@ -1,8 +1,7 @@
 "use client"
 import { PrimaryButton } from "@/components/common/Button"
-import { useOrders } from "@/hooks/useOrders"
 import { useUser } from "@/hooks/useUser"
-import { uploadOrderSlip } from "@/services/order_service"
+import { getOrderById, uploadOrderSlip } from "@/services/order_service"
 import { Order } from "@/types/order_type"
 import { useRouter, useParams } from "next/navigation"
 import { useEffect, useState } from "react"
@@ -14,7 +13,6 @@ const CheckoutPage = () => {
   const params = useParams()
   const orderId = params.id as string
   const [order, setOrder] = useState<Order>()
-  const { getOrderById } = useOrders()
   const { user, isProfileComplete, isLoaded: userLoaded } = useUser()
 
   const [paymentSlip, setPaymentSlip] = useState<File | null>(null)

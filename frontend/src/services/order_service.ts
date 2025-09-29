@@ -1,5 +1,5 @@
 import { api } from "./api"
-import { Order } from "@/types/order_type"
+import { Order, OrderStatus } from "@/types/order_type"
 import { uploadImage } from "./product_service"
 
 const BASE_ORDER = "/order"
@@ -24,6 +24,16 @@ export const getOrderById = async (orderId: string): Promise<Order> => {
   }
 }
 
+export const updateOrderStatusById = async (orderId: string, status: OrderStatus): Promise<Order> => {
+  try {
+    const response = await api.put(`${BASE_ORDER}/${orderId}`, {status})
+    return response.data
+  } catch (error) {
+    console.error("Get order by id error:", error)
+    throw error
+  }
+}
+
 export const deleteOrderById = async (orderId: string): Promise<Order> => {
   try {
     const response = await api.delete(`${BASE_ORDER}/${orderId}`)
@@ -35,10 +45,11 @@ export const deleteOrderById = async (orderId: string): Promise<Order> => {
 }
 
 // upload slip
-export const uploadOrderSlip = async (orderId: string, file: File) => {
+export const uploadOrderSlip = async (orderId: string, file: File): Promise<Order> => {
   try {
     const response = await api.post(`${BASE_ORDER}/${orderId}/upload-slip`)
-    await uploadImage(file, response.data.public_url)
+    await uploadImage(file, response.data.upload_url)
+    return response.data
   } catch (error) {
     console.error("Upload order slip error:", error)
     throw error

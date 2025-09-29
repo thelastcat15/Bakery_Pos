@@ -43,10 +43,11 @@ func (p *Product) ToResponse() ProductResponse {
 
 func (order *Order) ToResponse() OrderResponse {
 	resp := OrderResponse{
-		OrderID: order.ID,
-		Total:   order.Total,
-		Status:  order.Status,
-		Items:   order.Items,
+		OrderID:   order.ID,
+		Total:     order.Total,
+		Status:    order.Status,
+		Items:     order.Items,
+		CreatedAt: order.CreatedAt,
 	}
 	return resp
 }

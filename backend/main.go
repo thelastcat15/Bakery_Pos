@@ -85,6 +85,7 @@ func main() {
 	order := api.Group("/order", middleware.Auth)
 	order.Get("/", routes.GetAllOrders)
 	order.Get("/:order_id", routes.GetOrderByID)
+	order.Put("/:order_id", routes.UpdateOrderStatus)
 	order.Delete("/:order_id", routes.DeleteOrder)
 	order.Post("/:order_id/upload-slip", routes.GenerateOrderSlipURL)
 

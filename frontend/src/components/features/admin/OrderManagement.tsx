@@ -1,10 +1,11 @@
 "use client"
 
-import { useOrders } from "@/hooks/useOrders"
+import { useOrders } from "@/context/OrderContext"
 import { useState } from "react"
 
 const OrderManagement = () => {
   const { orders, updateOrderStatus, deleteOrder, isLoaded } = useOrders()
+
   const [selectedSlip, setSelectedSlip] = useState<string | null>(null)
   type OrderStatus = "pending" | "confirmed" | "shipping" | "delivered"
 
@@ -90,13 +91,15 @@ const OrderManagement = () => {
           </div>
         ) : (
           orders.map((order) => (
-            <div key={order.id} className="bg-white p-6 rounded-lg border">
+            <div key={order.order_id} className="bg-white p-6 rounded-lg border">
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h3 className="text-lg font-semibold">#{order.id}</h3>
-                  <p className="text-sm text-gray-500">
-                    {new Date(order.createdAt).toLocaleString("th-TH")}
-                  </p>
+                  <h3 className="text-lg font-semibold">#{order.order_id}</h3>
+                  {order.create_at && (
+                    <p className="text-sm text-gray-500">
+                      {new Date(order.create_at).toLocaleString("th-TH")}
+                    </p>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   <span
@@ -110,7 +113,7 @@ const OrderManagement = () => {
                       onClick={() => {
                         const nextStatus = getNextStatus(order.status)
                         if (nextStatus) {
-                          updateOrderStatus(order.id, nextStatus as any)
+                          updateOrderStatus(order.order_id, nextStatus as any)
                         }
                       }}
                       className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
@@ -120,7 +123,7 @@ const OrderManagement = () => {
                   <button
                     onClick={() => {
                       if (window.confirm("ต้องการลบคำสั่งซื้อนี้หรือไม่?")) {
-                        deleteOrder(order.id)
+                        deleteOrder(order.order_id)
                       }
                     }}
                     className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600">
@@ -133,13 +136,13 @@ const OrderManagement = () => {
                 {/* Customer Info */}
                 <div>
                   <h4 className="font-medium mb-2">ลูกค้า</h4>
-                  <p className="text-sm">{order.customerInfo.name}</p>
+                  {/* <p className="text-sm">{order.customerInfo.name}</p>
                   <p className="text-sm text-gray-600">
                     {order.customerInfo.phone}
                   </p>
                   <p className="text-sm text-gray-600">
                     {order.customerInfo.address}
-                  </p>
+                  </p> */}
                 </div>
 
                 {/* Items */}
@@ -165,7 +168,7 @@ const OrderManagement = () => {
                   <p className="text-lg font-bold text-amber-600 mb-2">
                     ฿{order.total.toLocaleString()}
                   </p>
-                  {order.paymentSlip ? (
+                  {order.public_url ? (
                     <div className="text-sm space-y-2">
                       <div className="flex items-center gap-1 text-green-600">
                         <span>✓</span>
@@ -175,36 +178,22 @@ const OrderManagement = () => {
                         <p className="font-medium text-xs mb-1">
                           📄 สลิปการโอน
                         </p>
-                        {order.paymentSlip instanceof File ? (
-                          <img
-                            src={URL.createObjectURL(order.paymentSlip)}
-                            alt="Payment slip"
-                            className="max-w-full h-24 object-contain border rounded cursor-pointer hover:opacity-80 transition-opacity"
-                            onClick={() =>
-                              setSelectedSlip(
-                                URL.createObjectURL(order.paymentSlip as File)
-                              )
-                            }
-                          />
-                        ) : (
-                          <img
-                            src={order.paymentSlip}
-                            alt="Payment slip"
-                            className="max-w-full h-24 object-contain border rounded cursor-pointer hover:opacity-80 transition-opacity"
-                            onClick={() =>
-                              setSelectedSlip(order.paymentSlip as string)
-                            }
-                            onError={(e) => {
-                              // Fallback เมื่อโหลดภาพไม่ได้
-                              const target = e.target as HTMLImageElement
-                              target.style.display = "none"
-                              const fallback = document.createElement("div")
-                              fallback.className = "text-xs text-gray-500 p-2"
-                              fallback.textContent = "ไม่สามารถโหลดสลิปได้"
-                              target.parentNode?.appendChild(fallback)
-                            }}
-                          />
-                        )}
+                        <img
+                          src={order.public_url}
+                          alt="Payment slip"
+                          className="max-w-full h-24 object-contain border rounded cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() =>
+                            setSelectedSlip(order.public_url as string)
+                          }
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement
+                            target.style.display = "none"
+                            const fallback = document.createElement("div")
+                            fallback.className = "text-xs text-gray-500 p-2"
+                            fallback.textContent = "ไม่สามารถโหลดสลิปได้"
+                            target.parentNode?.appendChild(fallback)
+                          }}
+                        />
                       </div>
                     </div>
                   ) : (
