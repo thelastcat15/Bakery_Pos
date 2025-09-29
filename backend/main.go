@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"strings"
 
 	"Bakery_Pos/db"
 	"Bakery_Pos/middleware"
@@ -36,11 +37,21 @@ func main() {
 		StrictRouting: false,
 	})
 	app.Use(func(c *fiber.Ctx) error {
-		log.Printf("Request: %s %s, IP: %s", c.Method(), c.OriginalURL(), c.IP())
+		forwarded := c.Get("X-Forwarded-For")
+		realIP := c.Get("X-Real-IP")
+
+		ip := c.IP()
+		if forwarded != "" {
+			parts := strings.Split(forwarded, ",")
+			ip = strings.TrimSpace(parts[0])
+		} else if realIP != "" {
+			ip = realIP
+		}
+		log.Printf("Request: %s %s, IP: %s", c.Method(), c.OriginalURL(), ip)
 		return c.Next()
 	})
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "http://127.0.0.1:3000, http://127.0.0.1:5000, https://*.github.dev",
+		AllowOrigins:     "http://127.0.0.1:3000, http://127.0.0.1:5000, https://silver-guacamole-p6xpxx5xg4ph7j4-3000.app.github.dev/",
 		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
 		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
 		AllowCredentials: true,
