@@ -32,7 +32,11 @@ func GetAllOrders(c *fiber.Ctx) error {
 
 	var resp []models.OrderResponse
 	for _, order := range orders {
-		resp = append(resp, order.ToResponse())
+		temp := order.ToResponse()
+		filePath := fmt.Sprintf("orders/%s/%s", order.ID, "slip.png")
+		public_url := db.Storage.GetPublicURL("order-slips", filePath)
+		temp.PublicURL = &public_url
+		resp = append(resp, temp)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(resp)

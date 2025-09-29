@@ -95,11 +95,9 @@ const OrderManagement = () => {
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <h3 className="text-lg font-semibold">#{order.order_id}</h3>
-                  {order.create_at && (
-                    <p className="text-sm text-gray-500">
-                      {new Date(order.create_at).toLocaleString("th-TH")}
-                    </p>
-                  )}
+                  <p className="text-sm text-gray-500">
+                    {new Date(order.create_at).toLocaleString("th-TH")}
+                  </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <span

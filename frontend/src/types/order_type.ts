@@ -23,7 +23,7 @@ export interface Order {
   status: OrderStatus
   public_url?: string
   upload_url?: string
-  create_at?: Date
+  create_at: Date
 
   items: OrderItem[]
 }
