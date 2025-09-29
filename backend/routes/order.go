@@ -26,7 +26,7 @@ func GetAllOrders(c *fiber.Ctx) error {
 	}
 
 	var orders []models.Order
-	if err := db.DB.Preload("items").Where("user_id = ?", userID).Find(&orders).Error; err != nil {
+	if err := db.DB.Preload("Items").Where("user_id = ?", userID).Find(&orders).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch orders"})
 	}
 
@@ -77,24 +77,25 @@ func GetOrderByID(c *fiber.Ctx) error {
 }
 
 var orderStatusSteps = []string{"pending", "confirmed", "shipping", "delivered"}
+
 func isValidStatusTransition(current, next string) bool {
-    currentIndex := -1
-    nextIndex := -1
-    for i, s := range orderStatusSteps {
-        if s == current {
-            currentIndex = i
-        }
-        if s == next {
-            nextIndex = i
-        }
-    }
-    if currentIndex == -1 || nextIndex == -1 {
-        return false
-    }
-    if nextIndex > currentIndex+1 {
-        return false
-    }
-    return true
+	currentIndex := -1
+	nextIndex := -1
+	for i, s := range orderStatusSteps {
+		if s == current {
+			currentIndex = i
+		}
+		if s == next {
+			nextIndex = i
+		}
+	}
+	if currentIndex == -1 || nextIndex == -1 {
+		return false
+	}
+	if nextIndex > currentIndex+1 {
+		return false
+	}
+	return true
 }
 
 // UpdateOrderStatus godoc
@@ -121,7 +122,7 @@ func UpdateOrderStatus(c *fiber.Ctx) error {
 		}
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch order"})
 	}
-	
+
 	if !isValidStatusTransition(order.Status, body.Status) {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Cannot skip status steps",
