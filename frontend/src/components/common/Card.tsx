@@ -201,8 +201,8 @@ export const OrderCard = ({ order }: OrderProps) => {
     <div className="bg-white rounded-2xl p-4 md:p-6 shadow-md hover:shadow-lg transition-shadow">
       <div className="flex justify-between items-start">
         <div>
-          <h3 className="font-semibold">#{order.id}</h3>
-          <p className="text-sm text-gray-500">{order.date}</p>
+          <h3 className="font-semibold">#{order.order_id}</h3>
+          <p className="text-sm text-gray-500">{new Date(order.create_at).toLocaleString("th-TH")}</p>
         </div>
         <span
           className={`px-3 py-1 rounded-full text-xs font-medium ${statusStyle.color}`}>

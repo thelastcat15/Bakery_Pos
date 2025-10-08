@@ -26,13 +26,17 @@ func GetAllOrders(c *fiber.Ctx) error {
 	}
 
 	var orders []models.Order
-	if err := db.DB.Preload("items").Where("user_id = ?", userID).Find(&orders).Error; err != nil {
+	if err := db.DB.Preload("Items").Where("user_id = ?", userID).Find(&orders).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch orders"})
 	}
 
 	var resp []models.OrderResponse
 	for _, order := range orders {
-		resp = append(resp, order.ToResponse())
+		temp := order.ToResponse()
+		filePath := fmt.Sprintf("orders/%s/%s", order.ID, "slip.png")
+		public_url := db.Storage.GetPublicURL("order-slips", filePath)
+		temp.PublicURL = &public_url
+		resp = append(resp, temp)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(resp)
@@ -62,8 +66,7 @@ func GetOrderByID(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch order"})
 	}
 
-	fileName := fmt.Sprintf("order-%s-slip.png", order.ID)
-	filePath := fmt.Sprintf("orders/%s/%s", order.ID, fileName)
+	filePath := fmt.Sprintf("orders/%s/%s", order.ID, "slip.png")
 
 	signedURL, publicURL, err := db.Storage.GenerateUploadURL("order-slips", filePath)
 	if err != nil {
@@ -75,6 +78,68 @@ func GetOrderByID(c *fiber.Ctx) error {
 	resp.PublicURL = &publicURL
 
 	return c.Status(fiber.StatusOK).JSON(resp)
+}
+
+var orderStatusSteps = []string{"pending", "confirmed", "shipping", "delivered"}
+
+func isValidStatusTransition(current, next string) bool {
+	currentIndex := -1
+	nextIndex := -1
+	for i, s := range orderStatusSteps {
+		if s == current {
+			currentIndex = i
+		}
+		if s == next {
+			nextIndex = i
+		}
+	}
+	if currentIndex == -1 || nextIndex == -1 {
+		return false
+	}
+	if nextIndex > currentIndex+1 {
+		return false
+	}
+	return true
+}
+
+// UpdateOrderStatus godoc
+// @Summary Update the status of an order
+// @Description Update the status of a single order for the logged-in user
+// @Tags Order
+// @Accept json
+// @Produce json
+// @Param order_id path string true "Order ID"
+// @Param status body map[string]string true "New status, e.g., {\"status\":\"confirmed\"}"
+// @Success 200 {object} models.OrderResponse
+// @Router /order/{order_id} [put]
+func UpdateOrderStatus(c *fiber.Ctx) error {
+	orderID := c.Params("order_id")
+	var body models.BodyUpdateOrder
+	if err := c.BodyParser(&body); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
+	}
+
+	var order models.Order
+	if err := db.DB.Where("id = ?", orderID).First(&order).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Order not found"})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch order"})
+	}
+
+	if !isValidStatusTransition(order.Status, body.Status) {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Cannot skip status steps",
+		})
+	}
+
+	// อัพเดต status
+	order.Status = body.Status
+	if err := db.DB.Save(&order).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to update order status"})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(order.ToResponse())
 }
 
 // GenerateOrderSlipURL godoc
@@ -100,8 +165,7 @@ func GenerateOrderSlipURL(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Order not found"})
 	}
 
-	fileName := fmt.Sprintf("order-%s-slip.png", order.ID)
-	filePath := fmt.Sprintf("orders/%s/%s", order.ID, fileName)
+	filePath := fmt.Sprintf("orders/%s/%s", order.ID, "slip.png")
 
 	signedURL, publicURL, err := db.Storage.GenerateUploadURL("order-slips", filePath)
 	if err != nil {

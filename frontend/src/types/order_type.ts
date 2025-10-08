@@ -20,12 +20,16 @@ export interface OrderItem {
 export interface Order {
   order_id: string
   total: number
-  status: string
+  status: OrderStatus
   public_url?: string
   upload_url?: string
+  create_at: Date
 
   items: OrderItem[]
 }
+
+export type OrderStatus = "pending" | "confirmed" | "shipping" | "delivered"
+
 
 
 // Add id Order Custom

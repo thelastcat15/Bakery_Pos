@@ -25,3 +25,7 @@ type BodyProductRequest struct {
 type ImageIDsRequest struct {
 	IDs []uint `json:"ids"`
 }
+
+type BodyUpdateOrder struct {
+	Status string `json:"status"`
+}

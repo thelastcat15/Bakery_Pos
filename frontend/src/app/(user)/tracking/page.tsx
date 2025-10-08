@@ -1,7 +1,7 @@
 "use client"
 import { CategoryButton } from "@/components/common/Button"
 import { OrderCard } from "@/components/common/Card"
-import { useOrders } from "@/hooks/useOrders"
+import { useOrders } from "@/context/OrderContext"
 import { useState } from "react"
 
 const OrderTrackingPage = () => {
@@ -71,7 +71,7 @@ const OrderTrackingPage = () => {
           </div>
         ) : (
           filteredOrders.map((order) => (
-            <OrderCard key={order.id} order={order} />
+            <OrderCard key={order.order_id} order={order} />
           ))
         )}
       </div>

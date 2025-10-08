@@ -1,6 +1,8 @@
 package models
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 )
 
@@ -61,6 +63,8 @@ type OrderResponse struct {
 	Status    string  `json:"status"`
 	PublicURL *string `json:"public_url,omitempty"`
 	UploadURL *string `json:"upload_url,omitempty"`
+
+	CreatedAt time.Time `json:"create_at"`
 
 	Items []OrderItem `json:"items"`
 }
