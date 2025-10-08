@@ -2,10 +2,12 @@
 import AdminOverview from "@/components/features/admin/AdminOverview"
 import OrderManagement from "@/components/features/admin/OrderManagement"
 import ProductManagement from "@/components/features/admin/ProductManagement"
+import ProductSalesDetail from "@/components/features/admin/ProductSalesDetail"
 import PromotionManagement from "@/components/features/admin/PromotionManagement"
 import {
   OrdersIcon,
   OverviewIcon,
+  ProductSalesIcon,
   ProductsIcon,
   PromotionsIcon,
 } from "@/components/shared/Icons"
@@ -20,6 +22,7 @@ const AdminDashBoard = () => {
     { id: "products", label: "จัดการสินค้า", icon: <ProductsIcon /> },
     { id: "orders", label: "จัดการคำสั่งซื้อ", icon: <OrdersIcon /> },
     { id: "promotions", label: "โปรโมชั่น", icon: <PromotionsIcon /> },
+    { id: "productSales", label: "รายงานการขาย", icon: <ProductSalesIcon /> },
   ]
 
   return (
@@ -54,6 +57,7 @@ const AdminDashBoard = () => {
         {activeMenu === "products" && <ProductManagement />}
         {activeMenu === "orders" && <OrderManagement />}
         {activeMenu === "promotions" && <PromotionManagement />}
+        {activeMenu === "productSales" && <ProductSalesDetail />}
       </main>
     </div>
   )
