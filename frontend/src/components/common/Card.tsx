@@ -47,11 +47,11 @@ export const CardProduct = ({ product }: CardProductProps) => {
         />
       </figure>
       {/* Discount badge */}
-      {priceInfo.hasDiscount && (
+      {/* {priceInfo.hasDiscount && (
         <div className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full font-bold">
           -{priceInfo.discountPercentage}%
         </div>
-      )}
+      )} */}
       <div className="p-3 md:p-4 flex flex-col flex-1">
         <h3 className="font-semibold md:text-lg text-gray-900 truncate">
           {product.name}

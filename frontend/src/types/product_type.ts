@@ -15,3 +15,30 @@ export interface ReportProduct {
   quantity: number;
   revenue: number;
 }
+
+export interface SalesByHourReport {
+  hour: string;
+  total: number;
+  orders: number;
+}
+
+export interface SalesByDayReport {
+  date: string;
+  total: number;
+  orders: number;
+}
+
+export interface ProductSalesSummary {
+  product_id: number;
+  product_name: string;
+  total_quantity: number;
+  total_revenue: number;
+}
+
+export interface ProductCustomerDetail {
+  customer_id: string;
+  customer_name: string;
+  order_count: number;
+  total_quantity: number;
+  total_amount: number;
+}

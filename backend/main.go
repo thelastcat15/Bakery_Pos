@@ -105,6 +105,9 @@ func main() {
 	reports.Get("/products/top", routes_admin.GetTopProducts)
 	reports.Get("/sales/hourly", routes_admin.GetSalesByHour)
 	reports.Get("/sales/daily", routes_admin.GetSalesByDay)
+	// Product level reports
+	reports.Get("/products/sales", routes_admin.GetProductSalesSummary)
+	reports.Get("/products/:id/customers", routes_admin.GetProductCustomers)
 
 	app.Get("/*", swagger.HandlerDefault)
 	app.Listen(":5000")

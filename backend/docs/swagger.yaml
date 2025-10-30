@@ -145,6 +145,19 @@ definitions:
       upload_url:
         type: string
     type: object
+  models.ProductCustomerDetail:
+    properties:
+      customer_id:
+        type: string
+      customer_name:
+        type: string
+      order_count:
+        type: integer
+      total_amount:
+        type: number
+      total_quantity:
+        type: integer
+    type: object
   models.ProductResponse:
     properties:
       category:
@@ -165,6 +178,17 @@ definitions:
         type: number
       quantity:
         type: integer
+    type: object
+  models.ProductSalesSummary:
+    properties:
+      product_id:
+        type: integer
+      product_name:
+        type: string
+      total_quantity:
+        type: integer
+      total_revenue:
+        type: number
     type: object
   models.PromotionResponse:
     properties:
@@ -702,6 +726,64 @@ paths:
       summary: Update a promotion
       tags:
       - promotion
+  /reports/products/{id}/customers:
+    get:
+      consumes:
+      - application/json
+      description: Get customers who bought a specific product with order counts and
+        totals
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Start date YYYY-MM-DD
+        in: query
+        name: start
+        type: string
+      - description: End date YYYY-MM-DD
+        in: query
+        name: end
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.ProductCustomerDetail'
+            type: array
+      summary: Get customers for a product
+      tags:
+      - reports
+  /reports/products/sales:
+    get:
+      consumes:
+      - application/json
+      description: Get sales summary per product for a date range (optional)
+      parameters:
+      - description: Start date YYYY-MM-DD
+        in: query
+        name: start
+        type: string
+      - description: End date YYYY-MM-DD
+        in: query
+        name: end
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.ProductSalesSummary'
+            type: array
+      summary: Get products sales summary
+      tags:
+      - reports
   /reports/products/top:
     get:
       consumes:

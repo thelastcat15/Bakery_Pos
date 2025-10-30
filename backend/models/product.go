@@ -39,11 +39,19 @@ type Promotion struct {
 func (p *Product) FinalPrice() float64 {
 	price := p.Price
 	maxDiscount := 0.0
+	now := time.Now()
 	for _, promo := range p.Promotions {
-		if promo.IsActive {
-			if promo.Discount > maxDiscount {
-				maxDiscount = promo.Discount
-			}
+		if !promo.IsActive {
+			continue
+		}
+		if promo.StartDate.IsZero() || promo.EndDate.IsZero() {
+			continue
+		}
+		if now.Before(promo.StartDate) || now.After(promo.EndDate) {
+			continue
+		}
+		if promo.Discount > maxDiscount {
+			maxDiscount = promo.Discount
 		}
 	}
 	return price - (price * maxDiscount / 100)

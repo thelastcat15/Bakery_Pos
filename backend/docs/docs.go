@@ -703,6 +703,46 @@ const docTemplate = `{
                 }
             }
         },
+        "/reports/products/sales": {
+            "get": {
+                "description": "Get sales summary per product for a date range (optional)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reports"
+                ],
+                "summary": "Get products sales summary",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start date YYYY-MM-DD",
+                        "name": "start",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date YYYY-MM-DD",
+                        "name": "end",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.ProductSalesSummary"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/reports/products/top": {
             "get": {
                 "description": "Get top N selling products for a given period",
@@ -739,6 +779,53 @@ const docTemplate = `{
                             "type": "array",
                             "items": {
                                 "$ref": "#/definitions/models.TopProductReport"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reports/products/{id}/customers": {
+            "get": {
+                "description": "Get customers who bought a specific product with order counts and totals",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reports"
+                ],
+                "summary": "Get customers for a product",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Product ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Start date YYYY-MM-DD",
+                        "name": "start",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date YYYY-MM-DD",
+                        "name": "end",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.ProductCustomerDetail"
                             }
                         }
                     }
@@ -1154,6 +1241,26 @@ const docTemplate = `{
                 }
             }
         },
+        "models.ProductCustomerDetail": {
+            "type": "object",
+            "properties": {
+                "customer_id": {
+                    "type": "string"
+                },
+                "customer_name": {
+                    "type": "string"
+                },
+                "order_count": {
+                    "type": "integer"
+                },
+                "total_amount": {
+                    "type": "number"
+                },
+                "total_quantity": {
+                    "type": "integer"
+                }
+            }
+        },
         "models.ProductResponse": {
             "type": "object",
             "properties": {
@@ -1183,6 +1290,23 @@ const docTemplate = `{
                 },
                 "quantity": {
                     "type": "integer"
+                }
+            }
+        },
+        "models.ProductSalesSummary": {
+            "type": "object",
+            "properties": {
+                "product_id": {
+                    "type": "integer"
+                },
+                "product_name": {
+                    "type": "string"
+                },
+                "total_quantity": {
+                    "type": "integer"
+                },
+                "total_revenue": {
+                    "type": "number"
                 }
             }
         },

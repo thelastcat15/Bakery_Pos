@@ -86,19 +86,40 @@ func GetSalesByHour(c *fiber.Ctx) error {
 	end := start.AddDate(0, 0, 1)
 
 	var results []models.SalesByHourReport
+		err = db.DB.Table("orders").
+			Select("TO_CHAR(orders.created_at, 'HH24:00') as hour, SUM(orders.total) as total, COUNT(*) as orders").
+			Where("orders.created_at >= ? AND orders.created_at < ?", start, end).
+			Group("hour").
+			Order("hour").
+			Scan(&results).Error
 
-	err = db.DB.Table("orders").
-		Select("TO_CHAR(orders.created_at, 'HH24:00') as hour, SUM(orders.total) as total, COUNT(*) as orders").
-		Where("orders.created_at >= ? AND orders.created_at < ?", start, end).
-		Group("hour").
-		Order("hour").
-		Scan(&results).Error
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to fetch report"})
+		}
 
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to fetch report"})
-	}
+		// Ensure we always return an array of 24 hours (00:00..23:00) so frontend chart
+		// receives a consistent payload even when there are no rows for some hours.
+		hourMapTotal := make(map[string]models.SalesByHourReport)
+		for _, r := range results {
+			hourMapTotal[r.Hour] = r
+		}
 
-	return c.JSON(results)
+		full := make([]models.SalesByHourReport, 0, 24)
+		for h := 0; h < 24; h++ {
+			key := ""
+			if h < 10 {
+				key = "0" + time.Itoa(h) + ":00"
+			} else {
+				key = time.Itoa(h) + ":00"
+			}
+			if v, ok := hourMapTotal[key]; ok {
+				full = append(full, v)
+			} else {
+				full = append(full, models.SalesByHourReport{Hour: key, Total: 0, Orders: 0})
+			}
+		}
+
+		return c.JSON(full)
 }
 
 // @Summary Get sales by day
@@ -137,6 +158,124 @@ func GetSalesByDay(c *fiber.Ctx) error {
 
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to fetch report"})
+	}
+
+	return c.JSON(results)
+}
+
+// @Summary Get products sales summary
+// @Description Get sales summary per product for a date range (optional)
+// @Tags reports
+// @Accept json
+// @Produce json
+// @Param start query string false "Start date YYYY-MM-DD"
+// @Param end query string false "End date YYYY-MM-DD"
+// @Success 200 {array} models.ProductSalesSummary
+// @Router /reports/products/sales [get]
+func GetProductSalesSummary(c *fiber.Ctx) error {
+	startStr := c.Query("start")
+	endStr := c.Query("end")
+
+	var start time.Time
+	var end time.Time
+	var err error
+
+	if startStr != "" {
+		start, err = time.Parse("2006-01-02", startStr)
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid start date format"})
+		}
+	}
+	if endStr != "" {
+		end, err = time.Parse("2006-01-02", endStr)
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid end date format"})
+		}
+		// include the full day
+		end = end.AddDate(0, 0, 1)
+	}
+
+	var results []models.ProductSalesSummary
+
+	q := db.DB.Table("order_items").
+		Select("order_items.product_id as product_id, products.name as product_name, SUM(order_items.quantity) as total_quantity, SUM(order_items.quantity * order_items.price) as total_revenue").
+		Joins("JOIN orders ON orders.id = order_items.order_id").
+		Joins("JOIN products ON products.id = order_items.product_id")
+
+	if !start.IsZero() && !end.IsZero() {
+		q = q.Where("orders.created_at >= ? AND orders.created_at < ?", start, end)
+	} else if !start.IsZero() {
+		q = q.Where("orders.created_at >= ?", start)
+	} else if !end.IsZero() {
+		q = q.Where("orders.created_at < ?", end)
+	}
+
+	q = q.Group("order_items.product_id, products.name").Order("total_quantity DESC").Scan(&results)
+
+	if q.Error != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to fetch product sales"})
+	}
+
+	return c.JSON(results)
+}
+
+// @Summary Get customers for a product
+// @Description Get customers who bought a specific product with order counts and totals
+// @Tags reports
+// @Accept json
+// @Produce json
+// @Param id path int true "Product ID"
+// @Param start query string false "Start date YYYY-MM-DD"
+// @Param end query string false "End date YYYY-MM-DD"
+// @Success 200 {array} models.ProductCustomerDetail
+// @Router /reports/products/{id}/customers [get]
+func GetProductCustomers(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "product id is required"})
+	}
+
+	startStr := c.Query("start")
+	endStr := c.Query("end")
+
+	var start time.Time
+	var end time.Time
+	var err error
+
+	if startStr != "" {
+		start, err = time.Parse("2006-01-02", startStr)
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid start date format"})
+		}
+	}
+	if endStr != "" {
+		end, err = time.Parse("2006-01-02", endStr)
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid end date format"})
+		}
+		end = end.AddDate(0, 0, 1)
+	}
+
+	var results []models.ProductCustomerDetail
+
+	q := db.DB.Table("order_items").
+		Select("orders.user_id as customer_id, COALESCE(users.name, users.username) as customer_name, COUNT(DISTINCT orders.id) as order_count, SUM(order_items.quantity) as total_quantity, SUM(order_items.quantity * order_items.price) as total_amount").
+		Joins("JOIN orders ON orders.id = order_items.order_id").
+		Joins("JOIN users ON users.id = orders.user_id").
+		Where("order_items.product_id = ?", id)
+
+	if !start.IsZero() && !end.IsZero() {
+		q = q.Where("orders.created_at >= ? AND orders.created_at < ?", start, end)
+	} else if !start.IsZero() {
+		q = q.Where("orders.created_at >= ?", start)
+	} else if !end.IsZero() {
+		q = q.Where("orders.created_at < ?", end)
+	}
+
+	q = q.Group("orders.user_id, users.name, users.username").Order("total_amount DESC").Scan(&results)
+
+	if q.Error != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to fetch product customers"})
 	}
 
 	return c.JSON(results)

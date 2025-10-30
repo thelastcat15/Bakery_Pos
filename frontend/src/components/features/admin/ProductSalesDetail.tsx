@@ -1,176 +1,44 @@
 "use client"
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { getProductSalesSummary, getProductCustomers } from "@/services/report_service"
+import { ProductSalesSummary, ProductCustomerDetail } from "@/types/product_type"
 
-// Mock data - แทนที่ด้วยข้อมูลจริงจาก API
-const mockProductSales = [
-  {
-    productId: 1,
-    productName: "เค้กช็อกโกแลต",
-    totalQuantity: 248,
-    totalRevenue: 19840,
-  },
-  {
-    productId: 2,
-    productName: "เค้กวานิลลา",
-    totalQuantity: 180,
-    totalRevenue: 14400,
-  },
-  {
-    productId: 3,
-    productName: "คุกกี้ช็อกชิป",
-    totalQuantity: 320,
-    totalRevenue: 16000,
-  },
-  {
-    productId: 4,
-    productName: "บราวนี่",
-    totalQuantity: 150,
-    totalRevenue: 9000,
-  },
-]
-
-const mockCustomerDetails: Record<
-  number,
-  {
-    customerId: number
-    customerName: string
-    orderCount: number
-    totalQuantity: number
-    totalAmount: number
-  }[]
-> = {
-  1: [
-    // เค้กช็อกโกแลต
-    {
-      customerId: 1,
-      customerName: "สมชาย ใจดี",
-      orderCount: 5,
-      totalQuantity: 45,
-      totalAmount: 3600,
-    },
-    {
-      customerId: 2,
-      customerName: "สมหญิง สวยงาม",
-      orderCount: 3,
-      totalQuantity: 30,
-      totalAmount: 2400,
-    },
-    {
-      customerId: 3,
-      customerName: "วิชัย มั่นคง",
-      orderCount: 8,
-      totalQuantity: 80,
-      totalAmount: 6400,
-    },
-    {
-      customerId: 4,
-      customerName: "กานดา ดอกไม้",
-      orderCount: 2,
-      totalQuantity: 20,
-      totalAmount: 1600,
-    },
-    {
-      customerId: 5,
-      customerName: "ประเสริฐ ดีเลิศ",
-      orderCount: 4,
-      totalQuantity: 35,
-      totalAmount: 2800,
-    },
-    {
-      customerId: 6,
-      customerName: "สุดา รักษ์ดี",
-      orderCount: 1,
-      totalQuantity: 8,
-      totalAmount: 640,
-    },
-    {
-      customerId: 7,
-      customerName: "นิรันดร์ ยั่งยืน",
-      orderCount: 6,
-      totalQuantity: 50,
-      totalAmount: 4000,
-    },
-    {
-      customerId: 8,
-      customerName: "มานะ พยายาม",
-      orderCount: 3,
-      totalQuantity: 25,
-      totalAmount: 2000,
-    },
-  ],
-  2: [
-    // เค้กวานิลลา
-    {
-      customerId: 1,
-      customerName: "สมชาย ใจดี",
-      orderCount: 3,
-      totalQuantity: 30,
-      totalAmount: 2400,
-    },
-    {
-      customerId: 9,
-      customerName: "ศิริพร แสงสว่าง",
-      orderCount: 4,
-      totalQuantity: 40,
-      totalAmount: 3200,
-    },
-    {
-      customerId: 10,
-      customerName: "ธนา เงินงาม",
-      orderCount: 5,
-      totalQuantity: 50,
-      totalAmount: 4000,
-    },
-  ],
-  3: [
-    // คุกกี้ช็อกชิป
-    {
-      customerId: 2,
-      customerName: "สมหญิง สวยงาม",
-      orderCount: 10,
-      totalQuantity: 120,
-      totalAmount: 6000,
-    },
-    {
-      customerId: 11,
-      customerName: "จิรา สุขใจ",
-      orderCount: 8,
-      totalQuantity: 100,
-      totalAmount: 5000,
-    },
-  ],
-  4: [
-    // บราวนี่
-    {
-      customerId: 3,
-      customerName: "วิชัย มั่นคง",
-      orderCount: 6,
-      totalQuantity: 60,
-      totalAmount: 3600,
-    },
-    {
-      customerId: 12,
-      customerName: "พิมพ์ใจ รักงาม",
-      orderCount: 4,
-      totalQuantity: 40,
-      totalAmount: 2400,
-    },
-  ],
-}
-
+// local state populated from API
 const ProductSalesDetail = () => {
-  const [selectedProductId, setSelectedProductId] = useState<number | null>(
-    null
-  )
+  const [productSummaries, setProductSummaries] = useState<ProductSalesSummary[]>([])
+  const [customerDetails, setCustomerDetails] = useState<ProductCustomerDetail[]>([])
+  const [selectedProductId, setSelectedProductId] = useState<number | null>(null)
 
-  const selectedProduct = mockProductSales.find(
-    (p) => p.productId === selectedProductId
-  )
-  const customerData = selectedProductId
-    ? mockCustomerDetails[selectedProductId] || []
-    : []
+  useEffect(() => {
+    const fetchSummaries = async () => {
+      try {
+        const data = await getProductSalesSummary()
+        setProductSummaries(data)
+      } catch (err) {
+        console.error("Failed to load product summaries", err)
+      }
+    }
+    fetchSummaries()
+  }, [])
 
-  const totalCustomers = customerData.length
+  useEffect(() => {
+    if (!selectedProductId) {
+      setCustomerDetails([])
+      return
+    }
+    const fetchCustomers = async () => {
+      try {
+        const data = await getProductCustomers(selectedProductId)
+        setCustomerDetails(data)
+      } catch (err) {
+        console.error("Failed to load customers for product", err)
+      }
+    }
+    fetchCustomers()
+  }, [selectedProductId])
+
+  const selectedProduct = productSummaries.find((p) => p.product_id === selectedProductId)
+  const totalCustomers = customerDetails.length
 
   return (
     <div className="p-6">
@@ -206,16 +74,16 @@ const ProductSalesDetail = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {mockProductSales.map((product) => (
-                <tr key={product.productId} className="hover:bg-gray-50">
+              {productSummaries.map((product) => (
+                <tr key={product.product_id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 text-sm text-gray-800">
-                    {product.productName}
+                    {product.product_name}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-800">
-                    {product.totalQuantity.toLocaleString()}
+                    {product.total_quantity.toLocaleString()}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-800">
-                    {product.totalRevenue.toLocaleString()}
+                    {product.total_revenue.toLocaleString()}
                   </td>
                 </tr>
               ))}
@@ -239,16 +107,12 @@ const ProductSalesDetail = () => {
           </label>
           <select
             value={selectedProductId || ""}
-            onChange={(e) =>
-              setSelectedProductId(
-                e.target.value ? Number(e.target.value) : null
-              )
-            }
+            onChange={(e) => setSelectedProductId(e.target.value ? Number(e.target.value) : null)}
             className="w-full md:w-96 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500">
             <option value="">--- เลือกสินค้า ---</option>
-            {mockProductSales.map((product) => (
-              <option key={product.productName} value={product.productId}>
-                {product.productName}
+            {productSummaries.map((product) => (
+              <option key={product.product_id} value={product.product_id}>
+                {product.product_name}
               </option>
             ))}
           </select>
@@ -261,18 +125,18 @@ const ProductSalesDetail = () => {
             <div className="bg-amber-50 px-6 py-4 border-b border-amber-100">
               <p className="text-sm text-gray-700">
                 <span className="font-semibold">สินค้าที่เลือก:</span>{" "}
-                {selectedProduct.productName}
+                {selectedProduct.product_name}
               </p>
               <p className="text-sm text-gray-700 mt-1">
                 ลูกค้าทั้งหมด{" "}
                 <span className="font-semibold">{totalCustomers}</span> คน |
                 ยอดขายรวม{" "}
                 <span className="font-semibold">
-                  {selectedProduct.totalRevenue.toLocaleString()}
+                  {selectedProduct.total_revenue.toLocaleString()}
                 </span>{" "}
                 บาท | ขายแล้ว{" "}
                 <span className="font-semibold">
-                  {selectedProduct.totalQuantity.toLocaleString()}
+                  {selectedProduct.total_quantity.toLocaleString()}
                 </span>{" "}
                 ชิ้น
               </p>
@@ -297,19 +161,19 @@ const ProductSalesDetail = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {customerData.map((customer) => (
-                  <tr key={customer.customerId} className="hover:bg-gray-50">
+                {customerDetails.map((customer) => (
+                  <tr key={customer.customer_id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 text-sm text-gray-800">
-                      {customer.customerName}
+                      {customer.customer_name}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-800 text-right">
-                      {customer.orderCount}
+                      {customer.order_count}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-800 text-right">
-                      {customer.totalQuantity}
+                      {customer.total_quantity}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-800 text-right">
-                      {customer.totalAmount.toLocaleString()}
+                      {customer.total_amount.toLocaleString()}
                     </td>
                   </tr>
                 ))}

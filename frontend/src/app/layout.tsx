@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { Geist, Geist_Mono, Prompt } from "next/font/google"
 import "./globals.css"
+import { PromotionProvider } from "@/context/PromotionContext"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,9 +31,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={prompt.variable}>
-      <body
-        className={`${prompt.variable} antialiased font-sans text-gray-800`}>
-        {children}
+      <body className={`${prompt.variable} antialiased font-sans text-gray-800`}>
+        <PromotionProvider>{children}</PromotionProvider>
       </body>
     </html>
   )

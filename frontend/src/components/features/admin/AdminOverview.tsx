@@ -1,5 +1,5 @@
-import { getTopProducts } from "@/services/report_service"
-import { ReportProduct } from "@/types/product_type"
+import { getTopProducts, getSalesByHour, getSalesByDay, getProductSalesSummary } from "@/services/report_service"
+import { ReportProduct, SalesByHourReport, SalesByDayReport, ProductSalesSummary } from "@/types/product_type"
 import { useEffect, useState } from "react"
 import {
   CartesianGrid,
@@ -11,38 +11,83 @@ import {
   YAxis,
 } from "recharts"
 
-// Mock sales data
-const weekSales = 25000
-const monthSales = 120000
-const yearSales = 1200000
-const totalSales = 3500000
+// transient UI state (will be populated from API)
+const INITIAL_NUMBER = 0
 
 
-const mockHourlySales = [
-  { hour: "6:00", sales: 5 },
-  { hour: "7:00", sales: 12 },
-  { hour: "8:00", sales: 25 },
-  { hour: "9:00", sales: 18 },
-  { hour: "10:00", sales: 22 },
-  { hour: "11:00", sales: 30 },
-  { hour: "12:00", sales: 45 },
-  { hour: "13:00", sales: 38 },
-  { hour: "14:00", sales: 28 },
-  { hour: "15:00", sales: 35 },
-  { hour: "16:00", sales: 20 },
-  { hour: "17:00", sales: 15 },
-  { hour: "18:00", sales: 8 },
-]
+// chart data shape: { hour: string, sales: number }
 
 const AdminOverview = () => {
-  const [topProducts, setTopProducts] = useState<ReportProduct[]>([]);
+  const [topProducts, setTopProducts] = useState<ReportProduct[]>([])
+  const [hourlySales, setHourlySales] = useState<{ hour: string; sales: number }[]>([])
+  const [weekSales, setWeekSales] = useState<number>(INITIAL_NUMBER)
+  const [monthSales, setMonthSales] = useState<number>(INITIAL_NUMBER)
+  const [yearSales, setYearSales] = useState<number>(INITIAL_NUMBER)
+  const [totalSales, setTotalSales] = useState<number>(INITIAL_NUMBER)
+  const [loading, setLoading] = useState<boolean>(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchData = async () => {
-      const data = await getTopProducts();
-      setTopProducts(data);
-    };
-    fetchData();
+      setLoading(true)
+      setError(null)
+      try {
+        // top products and hourly
+        const [productsData, hourlyData, productSummaries] = await Promise.all([
+          getTopProducts(),
+          getSalesByHour(),
+          getProductSalesSummary(),
+        ])
+
+        setTopProducts(productsData || [])
+
+        const chart = (hourlyData || []).map((h: SalesByHourReport) => ({
+          hour: h.hour,
+          sales: Math.round(h.total),
+        }))
+        setHourlySales(chart)
+
+        // compute totalSales from product summaries
+        const total = (productSummaries || []).reduce((s: number, p: ProductSalesSummary) => s + (p.total_revenue || 0), 0)
+        setTotalSales(Math.round(total))
+
+        // compute weekly, monthly, yearly sums using sales/daily endpoint
+        const now = new Date()
+        const toDate = (d: Date) => d.toISOString().slice(0, 10)
+
+        // week: Monday..today
+        const weekday = now.getDay() === 0 ? 7 : now.getDay()
+        const monday = new Date(now)
+        monday.setDate(now.getDate() - (weekday - 1))
+
+        const weekStart = toDate(new Date(monday.getFullYear(), monday.getMonth(), monday.getDate()))
+        const today = toDate(now)
+
+        // month start
+        const monthStart = toDate(new Date(now.getFullYear(), now.getMonth(), 1))
+
+        // year start
+        const yearStart = toDate(new Date(now.getFullYear(), 0, 1))
+
+        const [weekData, monthData, yearData] = await Promise.all([
+          getSalesByDay(weekStart, today),
+          getSalesByDay(monthStart, today),
+          getSalesByDay(yearStart, today),
+        ])
+
+        const sum = (arr: SalesByDayReport[]) => (arr || []).reduce((s, r) => s + (r.total || 0), 0)
+        setWeekSales(Math.round(sum(weekData)))
+        setMonthSales(Math.round(sum(monthData)))
+        setYearSales(Math.round(sum(yearData)))
+      } catch (err: any) {
+        console.error(err)
+        setError(err?.message || "failed to load dashboard data")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
   }, []);
 
   return (
@@ -51,30 +96,30 @@ const AdminOverview = () => {
 
       {/* Statistic Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-lg border">
-          <h3 className="text-sm text-gray-600">ยอดขายทั้งสัปดาห์</h3>
-          <p className="text-2xl font-bold text-green-600">
-            ฿{weekSales.toLocaleString()}
-          </p>
-        </div>
-        <div className="bg-white p-4 rounded-lg border">
-          <h3 className="text-sm text-gray-600">ยอดขายทั้งเดือน</h3>
-          <p className="text-2xl font-bold text-blue-600">
-            ฿{monthSales.toLocaleString()}
-          </p>
-        </div>
-        <div className="bg-white p-4 rounded-lg border">
-          <h3 className="text-sm text-gray-600">ยอดขายทั้งปี</h3>
-          <p className="text-2xl font-bold text-purple-600">
-            ฿{yearSales.toLocaleString()}
-          </p>
-        </div>
-        <div className="bg-white p-4 rounded-lg border">
-          <h3 className="text-sm text-gray-600">ยอดขายทั้งหมด</h3>
-          <p className="text-2xl font-bold text-amber-600">
-            ฿{totalSales.toLocaleString()}
-          </p>
-        </div>
+        {loading ? (
+          <div className="col-span-full text-center py-6">กำลังโหลดข้อมูล...</div>
+        ) : error ? (
+          <div className="col-span-full text-center text-red-600 py-6">{error}</div>
+        ) : (
+          <>
+            <div className="bg-white p-4 rounded-lg border">
+              <h3 className="text-sm text-gray-600">ยอดขายทั้งสัปดาห์</h3>
+              <p className="text-2xl font-bold text-green-600">฿{weekSales.toLocaleString()}</p>
+            </div>
+            <div className="bg-white p-4 rounded-lg border">
+              <h3 className="text-sm text-gray-600">ยอดขายทั้งเดือน</h3>
+              <p className="text-2xl font-bold text-blue-600">฿{monthSales.toLocaleString()}</p>
+            </div>
+            <div className="bg-white p-4 rounded-lg border">
+              <h3 className="text-sm text-gray-600">ยอดขายทั้งปี</h3>
+              <p className="text-2xl font-bold text-purple-600">฿{yearSales.toLocaleString()}</p>
+            </div>
+            <div className="bg-white p-4 rounded-lg border">
+              <h3 className="text-sm text-gray-600">ยอดขายทั้งหมด</h3>
+              <p className="text-2xl font-bold text-amber-600">฿{totalSales.toLocaleString()}</p>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Top Selling Products */}
@@ -96,7 +141,7 @@ const AdminOverview = () => {
       <div className="bg-white rounded-lg border">
         <h3 className="text-lg font-semibold mb-4">ยอดขายรายชั่วโมง (วันนี้)</h3>
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={mockHourlySales}>
+          <LineChart data={hourlySales}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="hour" />
             <YAxis />
