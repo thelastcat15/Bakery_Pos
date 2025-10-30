@@ -6,6 +6,9 @@ import { useState } from "react"
 const OrderManagement = () => {
   const { orders, updateOrderStatus, deleteOrder, isLoaded } = useOrders()
 
+  // Guard: orders may be null/undefined from context — use an empty array fallback
+  const safeOrders = orders ?? []
+
   const [selectedSlip, setSelectedSlip] = useState<string | null>(null)
   type OrderStatus = "pending" | "confirmed" | "shipping" | "delivered"
 
@@ -60,37 +63,37 @@ const OrderManagement = () => {
         <div className="bg-white p-4 rounded-lg border">
           <h3 className="text-sm text-gray-600">รอยืนยัน</h3>
           <p className="text-2xl font-bold text-orange-600">
-            {orders.filter((o) => o.status === "pending").length}
+            {safeOrders.filter((o) => o.status === "pending").length}
           </p>
         </div>
         <div className="bg-white p-4 rounded-lg border">
           <h3 className="text-sm text-gray-600">ยืนยันแล้ว</h3>
           <p className="text-2xl font-bold text-blue-600">
-            {orders.filter((o) => o.status === "confirmed").length}
+            {safeOrders.filter((o) => o.status === "confirmed").length}
           </p>
         </div>
         <div className="bg-white p-4 rounded-lg border">
           <h3 className="text-sm text-gray-600">กำลังจัดส่ง</h3>
           <p className="text-2xl font-bold text-yellow-600">
-            {orders.filter((o) => o.status === "shipping").length}
+            {safeOrders.filter((o) => o.status === "shipping").length}
           </p>
         </div>
         <div className="bg-white p-4 rounded-lg border">
           <h3 className="text-sm text-gray-600">จัดส่งสำเร็จ</h3>
           <p className="text-2xl font-bold text-green-600">
-            {orders.filter((o) => o.status === "delivered").length}
+            {safeOrders.filter((o) => o.status === "delivered").length}
           </p>
         </div>
       </div>
 
       {/* Orders */}
       <div className="space-y-4">
-        {orders.length === 0 ? (
+        {safeOrders.length === 0 ? (
           <div className="bg-white p-8 rounded-lg text-center text-gray-500">
             ยังไม่มีคำสั่งซื้อ
           </div>
         ) : (
-          orders.map((order) => (
+          safeOrders.map((order) => (
             <div key={order.order_id} className="bg-white p-6 rounded-lg border">
               <div className="flex justify-between items-start mb-4">
                 <div>
