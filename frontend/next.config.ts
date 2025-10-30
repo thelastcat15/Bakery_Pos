@@ -10,7 +10,7 @@ const nextConfig = {
     ],
   },
   eslint: {
-    ignoreDuringBuilds: true, // ✅ ข้าม lint error ตอน deploy
+    ignoreDuringBuilds: true,
   },
 }
 
