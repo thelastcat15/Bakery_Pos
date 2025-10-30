@@ -1,12 +1,9 @@
 import { useState } from "react"
 import { PrimaryButton } from "@/components/common/Button"
-import { login } from "@/services/user_service"
-import { register } from "@/services/user_service"
+import { login, register } from "@/services/user_service"
 
 // Validation regexes
-// Username: 3-20 characters, letters, numbers, underscores
 const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,20}$/
-// Password: at least 6 characters, at least one lowercase, one uppercase and one digit
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/
 
 export const RegisterForm = () => {
@@ -48,7 +45,6 @@ export const RegisterForm = () => {
       return
     }
 
-    // final checks
     const uOk = USERNAME_REGEX.test(formData.username)
     const pOk = PASSWORD_REGEX.test(formData.password1)
     setUsernameValid(uOk)
@@ -78,6 +74,8 @@ export const RegisterForm = () => {
           value={formData.username}
           onChange={handleInputChange}
           required
+          pattern="[a-zA-Z0-9_]{3,20}"
+          title="Username ต้องเป็นตัวอักษร ตัวเลข หรือ underscore ได้ 3-20 ตัวอักษร"
           className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 ${
             usernameValid ? "border-gray-300" : "border-red-500"
           }`}
@@ -101,6 +99,8 @@ export const RegisterForm = () => {
           value={formData.password1}
           onChange={handleInputChange}
           required
+          pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}"
+          title="รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร และประกอบด้วย ตัวพิมพ์ใหญ่ ตัวพิมพ์เล็ก และตัวเลข"
           className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 ${
             passwordValid ? "border-gray-300" : "border-red-500"
           }`}
@@ -124,6 +124,8 @@ export const RegisterForm = () => {
           value={formData.password2}
           onChange={handleInputChange}
           required
+          pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}"
+          title="รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร และประกอบด้วย ตัวพิมพ์ใหญ่ ตัวพิมพ์เล็ก และตัวเลข"
           className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 ${
             !passwordMatch ? "border-red-500" : "border-gray-300"
           }`}
@@ -132,11 +134,16 @@ export const RegisterForm = () => {
           <div className="text-red-500 text-sm mt-1">รหัสผ่านไม่ตรงกัน</div>
         )}
       </div>
+
       <PrimaryButton
         className="w-full mt-4"
         type="submit"
         disabled={
-          !passwordMatch || !formData.password1 || !formData.password2 || !usernameValid || !passwordValid
+          !passwordMatch ||
+          !formData.password1 ||
+          !formData.password2 ||
+          !usernameValid ||
+          !passwordValid
         }>
         สมัครสมาชิก
       </PrimaryButton>
@@ -150,32 +157,18 @@ export const LoginForm = () => {
     password: "",
   })
 
-  const [usernameValid, setUsernameValid] = useState(true)
-  const [passwordValid, setPasswordValid] = useState(true)
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }))
-    if (name === "username") setUsernameValid(USERNAME_REGEX.test(value))
-    if (name === "password") setPasswordValid(PASSWORD_REGEX.test(value))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!formData.username || !formData.password) return
 
-    if (!formData.username || !formData.password) {
-      return
-    }
-
-    // validate before submit
-    const uOk = USERNAME_REGEX.test(formData.username)
-    const pOk = PASSWORD_REGEX.test(formData.password)
-    setUsernameValid(uOk)
-    setPasswordValid(pOk)
-    if (!uOk || !pOk) return
     try {
       const response = await login(formData.username, formData.password)
       console.log("Login successful:", response.username)
@@ -199,12 +192,14 @@ export const LoginForm = () => {
           value={formData.username}
           onChange={handleInputChange}
           required
+          pattern="[a-zA-Z0-9_]{3,20}"
+          title="Username ต้องเป็นตัวอักษร ตัวเลข หรือ underscore ได้ 3-20 ตัวอักษร"
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
         />
       </div>
 
       <div className="mb-4">
-        <label htmlFor="password1" className="block text-sm font-medium mb-2">
+        <label htmlFor="password" className="block text-sm font-medium mb-2">
           Password
         </label>
         <input
@@ -215,6 +210,8 @@ export const LoginForm = () => {
           value={formData.password}
           onChange={handleInputChange}
           required
+          pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}"
+          title="รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร และประกอบด้วย ตัวพิมพ์ใหญ่ ตัวพิมพ์เล็ก และตัวเลข"
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
         />
       </div>
