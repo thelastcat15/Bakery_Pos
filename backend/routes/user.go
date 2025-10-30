@@ -149,6 +149,32 @@ func LoginHandler(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(resp)
 }
 
+// LogoutHandler godoc
+// @Summary Logout user
+// @Description Remove JWT token from cookies (logout)
+// @Tags user
+// @Produce json
+// @Success 200 {object} models.MessageResponse
+// @Router /user/logout [post]
+// @Security BearerAuth
+func LogoutHandler(c *fiber.Ctx) error {
+	c.Cookie(&fiber.Cookie{
+		Name:     "Authorization",
+		Value:    "",
+		Expires:  time.Now().Add(-time.Hour),
+		HTTPOnly: true,
+		Secure:   false,
+		SameSite: "None",
+		Path:     "/",
+	})
+
+	res := models.MessageResponse{
+		Message: "Logged out successfully",
+	}
+
+	return c.Status(fiber.StatusOK).JSON(res)
+}
+
 // UpdateSetting godoc
 // @Summary Update user settings
 // @Description Update phone number or place for authenticated user

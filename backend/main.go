@@ -65,6 +65,7 @@ func main() {
 
 	user := api.Group("/user")
 	user.Post("/login", routes.LoginHandler)
+	user.Post("/logout", routes.LogoutHandler)
 	user.Post("/register", routes.RegisterHandler)
 	user.Get("/setting", routes.UpdateSetting)
 

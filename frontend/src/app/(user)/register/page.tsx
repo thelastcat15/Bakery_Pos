@@ -1,8 +1,14 @@
 "use client"
 import { RegisterForm } from "@/components/common/Form"
+import { logout } from "@/services/user_service"
 import Link from "next/link"
+import { useEffect } from "react"
 
 const RegisterPage = () => {
+  useEffect(() => {
+    logout()
+  }, [])
+
   return (
     <div className="max-w-xl mx-auto mt-6">
       <h1 className="font-bold text-2xl text-center">สมัครสมาชิก</h1>

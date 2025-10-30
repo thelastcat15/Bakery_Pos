@@ -23,6 +23,16 @@ export const login = async (
   }
 }
 
+export const logout = async (): Promise<string> => {
+  try {
+    const response = await api.post(`${BASE_USER}/logout`)
+    return response.data.Message
+  } catch (error) {
+    console.error("Logout error:", error)
+    throw error
+  }
+}
+
 export const register = async (
   username: string,
   password: string
