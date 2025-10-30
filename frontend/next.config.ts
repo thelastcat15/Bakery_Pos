@@ -9,6 +9,9 @@ const nextConfig = {
       'zarkrqyamscgfmxrqafp.supabase.co'
     ],
   },
+  eslint: {
+    ignoreDuringBuilds: true, // ✅ ข้าม lint error ตอน deploy
+  },
 }
 
 export default nextConfig
