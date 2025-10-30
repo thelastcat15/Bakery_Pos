@@ -3,6 +3,7 @@ package routes_admin
 import (
 	"Bakery_Pos/db"
 	"Bakery_Pos/models"
+	"strconv"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -86,40 +87,40 @@ func GetSalesByHour(c *fiber.Ctx) error {
 	end := start.AddDate(0, 0, 1)
 
 	var results []models.SalesByHourReport
-		err = db.DB.Table("orders").
-			Select("TO_CHAR(orders.created_at, 'HH24:00') as hour, SUM(orders.total) as total, COUNT(*) as orders").
-			Where("orders.created_at >= ? AND orders.created_at < ?", start, end).
-			Group("hour").
-			Order("hour").
-			Scan(&results).Error
+	err = db.DB.Table("orders").
+		Select("TO_CHAR(orders.created_at, 'HH24:00') as hour, SUM(orders.total) as total, COUNT(*) as orders").
+		Where("orders.created_at >= ? AND orders.created_at < ?", start, end).
+		Group("hour").
+		Order("hour").
+		Scan(&results).Error
 
-		if err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to fetch report"})
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to fetch report"})
+	}
+
+	// Ensure we always return an array of 24 hours (00:00..23:00) so frontend chart
+	// receives a consistent payload even when there are no rows for some hours.
+	hourMapTotal := make(map[string]models.SalesByHourReport)
+	for _, r := range results {
+		hourMapTotal[r.Hour] = r
+	}
+
+	full := make([]models.SalesByHourReport, 0, 24)
+	for h := 0; h < 24; h++ {
+		key := ""
+		if h < 10 {
+			key = "0" + strconv.Itoa(h) + ":00"
+		} else {
+			key = strconv.Itoa(h) + ":00"
 		}
-
-		// Ensure we always return an array of 24 hours (00:00..23:00) so frontend chart
-		// receives a consistent payload even when there are no rows for some hours.
-		hourMapTotal := make(map[string]models.SalesByHourReport)
-		for _, r := range results {
-			hourMapTotal[r.Hour] = r
+		if v, ok := hourMapTotal[key]; ok {
+			full = append(full, v)
+		} else {
+			full = append(full, models.SalesByHourReport{Hour: key, Total: 0, Orders: 0})
 		}
+	}
 
-		full := make([]models.SalesByHourReport, 0, 24)
-		for h := 0; h < 24; h++ {
-			key := ""
-			if h < 10 {
-				key = "0" + time.Itoa(h) + ":00"
-			} else {
-				key = time.Itoa(h) + ":00"
-			}
-			if v, ok := hourMapTotal[key]; ok {
-				full = append(full, v)
-			} else {
-				full = append(full, models.SalesByHourReport{Hour: key, Total: 0, Orders: 0})
-			}
-		}
-
-		return c.JSON(full)
+	return c.JSON(full)
 }
 
 // @Summary Get sales by day

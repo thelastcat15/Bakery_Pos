@@ -3,6 +3,12 @@ import { PrimaryButton } from "@/components/common/Button"
 import { login } from "@/services/user_service"
 import { register } from "@/services/user_service"
 
+// Validation regexes
+// Username: 3-20 characters, letters, numbers, underscores
+const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,20}$/
+// Password: at least 6 characters, at least one lowercase, one uppercase and one digit
+const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/
+
 export const RegisterForm = () => {
   const [formData, setFormData] = useState({
     username: "",
@@ -11,6 +17,8 @@ export const RegisterForm = () => {
   })
 
   const [passwordMatch, setPasswordMatch] = useState(true)
+  const [usernameValid, setUsernameValid] = useState(true)
+  const [passwordValid, setPasswordValid] = useState(true)
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -19,11 +27,16 @@ export const RegisterForm = () => {
       [name]: value,
     }))
 
+    // live validation
+    if (name === "username") {
+      setUsernameValid(USERNAME_REGEX.test(value))
+    }
+    if (name === "password1") {
+      setPasswordValid(PASSWORD_REGEX.test(value))
+      if (formData.password2) setPasswordMatch(value === formData.password2)
+    }
     if (name === "password2") {
       setPasswordMatch(value === formData.password1)
-    }
-    if (name === "password1" && formData.password2) {
-      setPasswordMatch(value === formData.password2)
     }
   }
 
@@ -34,6 +47,13 @@ export const RegisterForm = () => {
       setPasswordMatch(false)
       return
     }
+
+    // final checks
+    const uOk = USERNAME_REGEX.test(formData.username)
+    const pOk = PASSWORD_REGEX.test(formData.password1)
+    setUsernameValid(uOk)
+    setPasswordValid(pOk)
+    if (!uOk || !pOk) return
 
     try {
       const response = await register(formData.username, formData.password1)
@@ -58,8 +78,15 @@ export const RegisterForm = () => {
           value={formData.username}
           onChange={handleInputChange}
           required
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+          className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 ${
+            usernameValid ? "border-gray-300" : "border-red-500"
+          }`}
         />
+        {!usernameValid && (
+          <div className="text-red-500 text-sm mt-1">
+            Username ต้องเป็นตัวอักษร ตัวเลข หรือ underscore ได้ 3-20 ตัวอักษร
+          </div>
+        )}
       </div>
 
       <div className="mb-4">
@@ -70,13 +97,19 @@ export const RegisterForm = () => {
           type="password"
           name="password1"
           id="password1"
-          placeholder="รหัสผ่าน (อย่างน้อย 6 ตัวอักษร)"
+          placeholder="รหัสผ่าน (อย่างน้อย 6 ตัวอักษร, มีพิมพ์ใหญ่ พิมพ์เล็ก และตัวเลข)"
           value={formData.password1}
           onChange={handleInputChange}
-          pattern=".{6,}"
           required
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+          className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 ${
+            passwordValid ? "border-gray-300" : "border-red-500"
+          }`}
         />
+        {!passwordValid && (
+          <div className="text-red-500 text-sm mt-1">
+            รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร และประกอบด้วย ตัวพิมพ์ใหญ่ ตัวพิมพ์เล็ก และตัวเลข
+          </div>
+        )}
       </div>
 
       <div className="mb-4">
@@ -102,7 +135,9 @@ export const RegisterForm = () => {
       <PrimaryButton
         className="w-full mt-4"
         type="submit"
-        disabled={!passwordMatch || !formData.password1 || !formData.password2}>
+        disabled={
+          !passwordMatch || !formData.password1 || !formData.password2 || !usernameValid || !passwordValid
+        }>
         สมัครสมาชิก
       </PrimaryButton>
     </form>
@@ -115,12 +150,17 @@ export const LoginForm = () => {
     password: "",
   })
 
+  const [usernameValid, setUsernameValid] = useState(true)
+  const [passwordValid, setPasswordValid] = useState(true)
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }))
+    if (name === "username") setUsernameValid(USERNAME_REGEX.test(value))
+    if (name === "password") setPasswordValid(PASSWORD_REGEX.test(value))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -129,6 +169,13 @@ export const LoginForm = () => {
     if (!formData.username || !formData.password) {
       return
     }
+
+    // validate before submit
+    const uOk = USERNAME_REGEX.test(formData.username)
+    const pOk = PASSWORD_REGEX.test(formData.password)
+    setUsernameValid(uOk)
+    setPasswordValid(pOk)
+    if (!uOk || !pOk) return
     try {
       const response = await login(formData.username, formData.password)
       console.log("Login successful:", response.username)

@@ -20,12 +20,18 @@ const INITIAL_NUMBER = 0
 const AdminOverview = () => {
   const [topProducts, setTopProducts] = useState<ReportProduct[]>([])
   const [hourlySales, setHourlySales] = useState<{ hour: string; sales: number }[]>([])
+  const [daySales, setDaySales] = useState<{ date: string; total: number }[]>([])
   const [weekSales, setWeekSales] = useState<number>(INITIAL_NUMBER)
   const [monthSales, setMonthSales] = useState<number>(INITIAL_NUMBER)
   const [yearSales, setYearSales] = useState<number>(INITIAL_NUMBER)
   const [totalSales, setTotalSales] = useState<number>(INITIAL_NUMBER)
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
+  const [chartsLoading, setChartsLoading] = useState<boolean>(true)
+  const [chartsError, setChartsError] = useState<string | null>(null)
+
+  const todayStr = new Date().toISOString().slice(0, 10)
+  const [selectedDate, setSelectedDate] = useState<string>(todayStr)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -90,6 +96,49 @@ const AdminOverview = () => {
     fetchData()
   }, []);
 
+  // fetch charts (hourly for selectedDate and last-7-days daily totals)
+  useEffect(() => {
+    const fetchCharts = async (dateStr: string) => {
+      setChartsLoading(true)
+      setChartsError(null)
+      try {
+        const hourly = await getSalesByHour(dateStr)
+        setHourlySales((hourly || []).map((h: SalesByHourReport) => ({ hour: h.hour, sales: Math.round(h.total) })))
+
+        // last 7 days (inclusive) — fill missing days with 0
+        const d = new Date(dateStr)
+        const start = new Date(d)
+        start.setDate(d.getDate() - 6)
+        const startStr = start.toISOString().slice(0, 10)
+        const daily = (await getSalesByDay(startStr, dateStr)) || []
+
+        // build a map from date -> total for quick lookup
+        const dailyMap = new Map<string, number>(
+          daily.map((dd: SalesByDayReport) => [dd.date, dd.total || 0])
+        )
+
+        // produce exactly 7 entries from start .. selectedDate (inclusive)
+        const days: { date: string; total: number }[] = []
+        for (let i = 0; i < 7; i++) {
+          const cur = new Date(start)
+          cur.setDate(start.getDate() + i)
+          const key = cur.toISOString().slice(0, 10)
+          const total = Math.round(dailyMap.get(key) || 0)
+          days.push({ date: key, total })
+        }
+
+        setDaySales(days)
+      } catch (err: any) {
+        console.error("charts error", err)
+        setChartsError(err?.message || "failed to load charts")
+      } finally {
+        setChartsLoading(false)
+      }
+    }
+
+    fetchCharts(selectedDate)
+  }, [selectedDate])
+
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold mb-6">ภาพรวมของร้าน</h2>
@@ -138,22 +187,59 @@ const AdminOverview = () => {
       </div>
 
       {/* Hourly Sales Chart */}
-      <div className="bg-white rounded-lg border">
-        <h3 className="text-lg font-semibold mb-4">ยอดขายรายชั่วโมง (วันนี้)</h3>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={hourlySales}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="hour" />
-            <YAxis />
-            <Tooltip />
-            <Line
-              type="monotone"
-              dataKey="sales"
-              stroke="#f59e0b"
-              strokeWidth={2}
+      <div className="bg-white rounded-lg border p-4">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">ยอดขายรายชั่วโมง</h3>
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-gray-600">เลือกวัน</label>
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="border px-2 py-1 rounded"
             />
-          </LineChart>
-        </ResponsiveContainer>
+          </div>
+        </div>
+
+        {chartsLoading ? (
+          <div className="py-12 text-center text-gray-500">กำลังโหลดกราฟ...</div>
+        ) : chartsError ? (
+          <div className="py-6 text-center text-red-600">{chartsError}</div>
+        ) : (
+          <div className="grid grid-cols-1 gap-6">
+            {/* 24-hour chart for selectedDate */}
+            <div className="bg-white">
+              <h4 className="text-sm text-gray-600 px-4 pt-2">ย้อนหลัง 24 ชั่วโมง ({selectedDate})</h4>
+              <div style={{ width: "100%", height: 260 }}>
+                <ResponsiveContainer>
+                  <LineChart data={hourlySales}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="hour" />
+                    <YAxis />
+                    <Tooltip />
+                    <Line type="monotone" dataKey="sales" stroke="#f59e0b" strokeWidth={2} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* 7-day chart ending at selectedDate */}
+            <div className="bg-white">
+              <h4 className="text-sm text-gray-600 px-4 pt-2">ย้อนหลัง 7 วัน</h4>
+              <div style={{ width: "100%", height: 260 }}>
+                <ResponsiveContainer>
+                  <LineChart data={daySales}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" />
+                    <YAxis />
+                    <Tooltip />
+                    <Line type="monotone" dataKey="total" stroke="#06b6d4" strokeWidth={2} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
