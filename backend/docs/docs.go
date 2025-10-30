@@ -171,6 +171,48 @@ const docTemplate = `{
                     }
                 }
             },
+            "put": {
+                "description": "Update the status of a single order for the logged-in user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Order"
+                ],
+                "summary": "Update the status of an order",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Order ID",
+                        "name": "order_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "New status, e.g., {\\",
+                        "name": "status",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.OrderResponse"
+                        }
+                    }
+                }
+            },
             "delete": {
                 "description": "Delete a single order of the logged-in user",
                 "produces": [
@@ -252,6 +294,18 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "type": "string",
+                        "description": "Search term to filter products by name or tag",
+                        "name": "q",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Return lightweight list (id,name,tag) for selection",
+                        "name": "simple",
+                        "in": "query"
+                    },
+                    {
                         "type": "integer",
                         "description": "Number of products per page (default 20)",
                         "name": "limit",
@@ -266,11 +320,11 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "When ` + "`" + `simple=true` + "`" + ` returns array of {id,name,tag} objects",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.ProductResponse"
+                                "type": "object"
                             }
                         }
                     }
@@ -504,6 +558,147 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/models.MessageResponse"
                         }
+                    }
+                }
+            }
+        },
+        "/promotions": {
+            "get": {
+                "description": "Get all promotions, optional ?product_id= to filter",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "promotion"
+                ],
+                "summary": "List promotions",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.PromotionResponse"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Add a new promotion to the database",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "promotion"
+                ],
+                "summary": "Create a new promotion",
+                "parameters": [
+                    {
+                        "description": "Promotion data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.BodyPromotionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.PromotionResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/promotions/{id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "promotion"
+                ],
+                "summary": "Get promotion by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Promotion ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.PromotionResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "promotion"
+                ],
+                "summary": "Update a promotion",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Promotion ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated promotion data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.BodyPromotionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.PromotionResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "promotion"
+                ],
+                "summary": "Delete a promotion",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Promotion ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
                     }
                 }
             }
@@ -758,6 +953,32 @@ const docTemplate = `{
                 }
             }
         },
+        "models.BodyPromotionRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "discount": {
+                    "type": "number"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "product_id": {
+                    "type": "integer"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
         "models.CartItemResponse": {
             "type": "object",
             "properties": {
@@ -884,20 +1105,16 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
-                "imageURL": {
-                    "type": "string"
-                },
                 "name": {
                     "type": "string"
                 },
-                "orderID": {
+                "order_id": {
                     "type": "string"
                 },
                 "price": {
-                    "type": "number",
-                    "format": "float64"
+                    "type": "number"
                 },
-                "productID": {
+                "product_id": {
                     "type": "integer"
                 },
                 "quantity": {
@@ -911,6 +1128,9 @@ const docTemplate = `{
         "models.OrderResponse": {
             "type": "object",
             "properties": {
+                "create_at": {
+                    "type": "string"
+                },
                 "items": {
                     "type": "array",
                     "items": {
@@ -966,6 +1186,35 @@ const docTemplate = `{
                 }
             }
         },
+        "models.PromotionResponse": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "discount": {
+                    "type": "number"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "product_id": {
+                    "type": "integer"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
         "models.SalesByDayReport": {
             "type": "object",
             "properties": {
@@ -1003,11 +1252,11 @@ const docTemplate = `{
                 "product_id": {
                     "type": "integer"
                 },
+                "quantity": {
+                    "type": "integer"
+                },
                 "revenue": {
                     "type": "number"
-                },
-                "total_sold": {
-                    "type": "integer"
                 }
             }
         },

@@ -16,9 +16,12 @@ import (
 // @Accept json
 // @Produce json
 // @Param lowStock query bool false "Filter products with stock < 10"
+// @Param q query string false "Search term to filter products by name or tag"
+// @Param simple query bool false "Return lightweight list (id,name,tag) for selection"
 // @Param limit query int false "Number of products per page (default 20)"
 // @Param page query int false "Page number (default 1)"
 // @Success 200 {array} models.ProductResponse
+// @Success 200 {array} object "When `simple=true` returns array of {id,name,tag} objects"
 // @Router /products [get]
 func GetProducts(c *fiber.Ctx) error {
 	var products []models.Product
@@ -29,17 +32,40 @@ func GetProducts(c *fiber.Ctx) error {
 	page := c.QueryInt("page", 1)
 
 	// db query
-	query := db.DB.Preload("Images").Order("updated_at DESC")
+	// support simple mode: return only id, name, tag for product selection
+	simple := c.QueryBool("simple", false)
+	q := c.Query("q", "")
+
+	query := db.DB.Order("updated_at DESC")
+	if !simple {
+		query = query.Preload("Images")
+	}
 	if lowStock {
 		query = query.Where("stock < ?", 10)
+	}
+	if q != "" {
+		like := fmt.Sprintf("%%%s%%", q)
+		query = query.Where("name LIKE ? OR tag LIKE ?", like, like)
 	}
 
 	// pagination
 	offset := (page - 1) * limit
+	if simple {
+		// return lightweight list
+		type SimpleProduct struct {
+			ID   uint   `json:"id"`
+			Name string `json:"name"`
+			Tag  string `json:"tag"`
+		}
+		var simples []SimpleProduct
+		if err := query.Model(&models.Product{}).Select("id, name, tag").Limit(limit).Offset(offset).Find(&simples).Error; err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch products"})
+		}
+		return c.Status(fiber.StatusOK).JSON(simples)
+	}
+
 	if err := query.Limit(limit).Offset(offset).Find(&products).Error; err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to fetch products",
-		})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch products"})
 	}
 
 	responses := make([]models.ProductResponse, len(products))

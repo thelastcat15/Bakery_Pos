@@ -51,13 +51,17 @@ func main() {
 		return c.Next()
 	})
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "http://127.0.0.1:3000, http://127.0.0.1:5000, https://silver-guacamole-p6xpxx5xg4ph7j4-3000.app.github.dev/",
+		AllowOrigins:     "http://localhost:3000, http://127.0.0.1:3000, https://silver-guacamole-p6xpxx5xg4ph7j4-3000.app.github.dev/",
 		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
 		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
 		AllowCredentials: true,
 	}))
 
 	api := app.Group("/api")
+
+	api.Get("/ping", func(c *fiber.Ctx) error {
+		return c.SendString("pong")
+	})
 
 	user := api.Group("/user")
 	user.Post("/login", routes.LoginHandler)
@@ -75,6 +79,14 @@ func main() {
 	product_select.Get("/images", middleware.AuthOptional, routes.GetImagesProduct)
 	product_select.Post("/images", middleware.Auth, middleware.Admin, routes_admin.UploadImagesProduct)
 	product_select.Delete("/images", middleware.Auth, middleware.Admin, routes_admin.DeleteImagesByID)
+
+	// Promotions (admin)
+	promotions := api.Group("/promotions")
+	promotions.Get("/", middleware.Auth, middleware.Admin, routes_admin.GetPromotions)
+	promotions.Post("/", middleware.Auth, middleware.Admin, routes_admin.CreatePromotion)
+	promotions.Get(":id", middleware.Auth, middleware.Admin, routes_admin.GetPromotionByID)
+	promotions.Put(":id", middleware.Auth, middleware.Admin, routes_admin.UpdatePromotion)
+	promotions.Delete(":id", middleware.Auth, middleware.Admin, routes_admin.DeletePromotion)
 
 	cart := api.Group("/cart", middleware.Auth)
 	cart.Get("/", routes.GetCart)

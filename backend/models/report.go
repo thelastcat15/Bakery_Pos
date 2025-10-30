@@ -3,7 +3,7 @@ package models
 type TopProductReport struct {
 	ProductID uint    `json:"product_id"`
 	Name      string  `json:"name"`
-	TotalSold int     `json:"total_sold"`
+	TotalSold int     `json:"quantity"`
 	Revenue   float64 `json:"revenue"`
 }
 

@@ -88,81 +88,87 @@ func UpdateProductCart(c *fiber.Ctx) error {
 	userIDStr := c.Locals("userid").(string)
 	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid user ID",
-		})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid user ID"})
 	}
 
 	productIDParam := c.Params("product_id")
 	productIDUint, err := strconv.ParseUint(productIDParam, 10, 64)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid product ID",
-		})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid product ID"})
 	}
+
+	fastMode := c.Query("fast") == "true"
 
 	var body models.FormEditCart
 	if err := c.BodyParser(&body); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid request body",
-		})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
 	}
 
 	var cart models.Cart
-	if err := db.DB.Preload("Items.Product.Promotions").
-		Preload("Items.Product.Images").
-		Where("user_id = ?", userID).
-		First(&cart).Error; err != nil {
-
-		if err == gorm.ErrRecordNotFound {
-			cart = models.Cart{UserID: userID}
-			if err := db.DB.Create(&cart).Error; err != nil {
-				return c.Status(500).JSON(fiber.Map{"error": "Failed to create cart"})
-			}
-		} else {
-			return c.Status(500).JSON(fiber.Map{"error": "Database error"})
-		}
+	cartQuery := db.DB.Where("user_id = ?", userID)
+	if fastMode {
+		cartQuery = cartQuery.Preload("Items")
+	} else {
+		cartQuery = cartQuery.Preload("Items.Product.Images").Preload("Items.Product.Promotions")
+	}
+	if err := cartQuery.FirstOrCreate(&cart, models.Cart{UserID: userID}).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to load or create cart"})
 	}
 
 	var cartItem models.CartItem
 	err = db.DB.Where("cart_id = ? AND product_id = ?", cart.ID, productIDUint).First(&cartItem).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return c.Status(500).JSON(fiber.Map{"error": "Database error"})
+	}
 
 	if err == gorm.ErrRecordNotFound {
-		if body.Quantity > 0 {
-			newItem := models.CartItem{
-				CartID:    cart.ID,
-				ProductID: uint(productIDUint),
-				Quantity:  body.Quantity,
-			}
-			if err := db.DB.Create(&newItem).Error; err != nil {
-				return c.Status(500).JSON(fiber.Map{"error": "Failed to add product"})
-			}
-		} else {
+		if body.Quantity <= 0 {
 			return c.Status(400).JSON(fiber.Map{"error": "Item does not exist"})
 		}
-	} else if err == nil {
+		cartItem = models.CartItem{
+			CartID:    cart.ID,
+			ProductID: uint(productIDUint),
+			Quantity:  body.Quantity,
+		}
+		if err := db.DB.Create(&cartItem).Error; err != nil {
+			return c.Status(500).JSON(fiber.Map{"error": "Failed to add product"})
+		}
+	} else {
 		if body.Quantity <= 0 {
 			if err := db.DB.Delete(&cartItem).Error; err != nil {
 				return c.Status(500).JSON(fiber.Map{"error": "Failed to remove item"})
 			}
+			cartItem.Quantity = 0
 		} else {
-			cartItem.Quantity = body.Quantity
-			if err := db.DB.Save(&cartItem).Error; err != nil {
-				return c.Status(500).JSON(fiber.Map{"error": "Failed to update quantity"})
+			if cartItem.Quantity != body.Quantity {
+				cartItem.Quantity = body.Quantity
+				if err := db.DB.Save(&cartItem).Error; err != nil {
+					return c.Status(500).JSON(fiber.Map{"error": "Failed to update quantity"})
+				}
 			}
 		}
-	} else {
-		return c.Status(500).JSON(fiber.Map{"error": "Database error"})
 	}
 
-	if err := db.DB.
-		Preload("Items.Product.Promotions").
-		Preload("Items.Product.Images").
-		First(&cart, cart.ID).Error; err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": "Failed to load updated cart"})
+	if cartItem.Quantity == 0 {
+		return c.Status(200).JSON(fiber.Map{"message": "Item removed"})
 	}
 
-	return c.Status(fiber.StatusOK).JSON(cart.ToResponse())
+	// โหลด Product ให้แน่นอน ถ้าเป็น nil
+	if cartItem.Product == nil || cartItem.Product.ID == 0 {
+		productQuery := db.DB.Where("id = ?", cartItem.ProductID)
+		if !fastMode {
+			productQuery = productQuery.Preload("Images").Preload("Promotions")
+		}
+		if err := productQuery.First(&cartItem.Product).Error; err != nil {
+			return c.Status(500).JSON(fiber.Map{"error": "Failed to load product info"})
+		}
+	}
+
+	cartToReturn := models.Cart{
+		Items: []models.CartItem{cartItem},
+	}
+
+	return c.Status(200).JSON(cartToReturn.ToResponse())
 }
 
 // Checkout godoc

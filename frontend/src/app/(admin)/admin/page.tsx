@@ -11,6 +11,8 @@ import {
   ProductsIcon,
   PromotionsIcon,
 } from "@/components/shared/Icons"
+import { CartProvider } from "@/context/CartContext"
+import { OrderProvider } from "@/context/OrderContext"
 
 import { useState } from "react"
 
@@ -26,40 +28,44 @@ const AdminDashBoard = () => {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
-      {/* Sidebar */}
-      <aside className="w-64 bg-white shadow-sm border-r">
-        <div className="p-6">
-          <h1 className="text-xl font-bold text-amber-600">
-            Sweet Heaven Admin
-          </h1>
-          <nav className="mt-6">
-            {menuItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => setActiveMenu(item.id)}
-                className={`w-full text-left px-6 py-3 flex items-center gap-3 hover:bg-gray-50 transition-colors ${
-                  activeMenu === item.id
-                    ? "bg-amber-50 border-r-2 border-amber-500 text-amber-700"
-                    : "text-gray-700"
-                }`}>
-                <span>{item.icon}</span>
-                <span>{item.label}</span>
-              </button>
-            ))}
-          </nav>
-        </div>
-      </aside>
+    <OrderProvider>
+      <CartProvider>
+        <div className="min-h-screen bg-gray-100 flex">
+          {/* Sidebar */}
+          <aside className="w-64 bg-white shadow-sm border-r">
+            <div className="p-6">
+              <h1 className="text-xl font-bold text-amber-600">
+                Sweet Heaven Admin
+              </h1>
+              <nav className="mt-6">
+                {menuItems.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveMenu(item.id)}
+                    className={`w-full text-left px-6 py-3 flex items-center gap-3 hover:bg-gray-50 transition-colors ${
+                      activeMenu === item.id
+                        ? "bg-amber-50 border-r-2 border-amber-500 text-amber-700"
+                        : "text-gray-700"
+                    }`}>
+                    <span>{item.icon}</span>
+                    <span>{item.label}</span>
+                  </button>
+                ))}
+              </nav>
+            </div>
+          </aside>
 
-      {/* Main content */}
-      <main className="flex-1 p-6">
-        {activeMenu === "overview" && <AdminOverview />}
-        {activeMenu === "products" && <ProductManagement />}
-        {activeMenu === "orders" && <OrderManagement />}
-        {activeMenu === "promotions" && <PromotionManagement />}
-        {activeMenu === "productSales" && <ProductSalesDetail />}
-      </main>
-    </div>
+          {/* Main content */}
+          <main className="flex-1 p-6">
+            {activeMenu === "overview" && <AdminOverview />}
+            {activeMenu === "products" && <ProductManagement />}
+            {activeMenu === "orders" && <OrderManagement />}
+            {activeMenu === "promotions" && <PromotionManagement />}
+            {activeMenu === "productSales" && <ProductSalesDetail />}
+          </main>
+        </div>
+      </CartProvider>
+    </OrderProvider>
   )
 }
 

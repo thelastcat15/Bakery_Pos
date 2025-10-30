@@ -15,6 +15,23 @@ definitions:
       quantity:
         type: integer
     type: object
+  models.BodyPromotionRequest:
+    properties:
+      description:
+        type: string
+      discount:
+        type: number
+      end_date:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+      product_id:
+        type: integer
+      start_date:
+        type: string
+    type: object
   models.CartItemResponse:
     properties:
       id:
@@ -96,16 +113,13 @@ definitions:
         type: string
       id:
         type: integer
-      imageURL:
-        type: string
       name:
         type: string
-      orderID:
+      order_id:
         type: string
       price:
-        format: float64
         type: number
-      productID:
+      product_id:
         type: integer
       quantity:
         type: integer
@@ -114,6 +128,8 @@ definitions:
     type: object
   models.OrderResponse:
     properties:
+      create_at:
+        type: string
       items:
         items:
           $ref: '#/definitions/models.OrderItem'
@@ -150,6 +166,25 @@ definitions:
       quantity:
         type: integer
     type: object
+  models.PromotionResponse:
+    properties:
+      description:
+        type: string
+      discount:
+        type: number
+      end_date:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      name:
+        type: string
+      product_id:
+        type: integer
+      start_date:
+        type: string
+    type: object
   models.SalesByDayReport:
     properties:
       date:
@@ -174,10 +209,10 @@ definitions:
         type: string
       product_id:
         type: integer
+      quantity:
+        type: integer
       revenue:
         type: number
-      total_sold:
-        type: integer
     type: object
   models.UploadOrderSlipResponse:
     properties:
@@ -331,6 +366,34 @@ paths:
       summary: Get a single order by ID
       tags:
       - Order
+    put:
+      consumes:
+      - application/json
+      description: Update the status of a single order for the logged-in user
+      parameters:
+      - description: Order ID
+        in: path
+        name: order_id
+        required: true
+        type: string
+      - description: New status, e.g., {\
+        in: body
+        name: status
+        required: true
+        schema:
+          additionalProperties:
+            type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.OrderResponse'
+      summary: Update the status of an order
+      tags:
+      - Order
   /order/{order_id}/upload-slip:
     post:
       consumes:
@@ -363,6 +426,14 @@ paths:
         in: query
         name: lowStock
         type: boolean
+      - description: Search term to filter products by name or tag
+        in: query
+        name: q
+        type: string
+      - description: Return lightweight list (id,name,tag) for selection
+        in: query
+        name: simple
+        type: boolean
       - description: Number of products per page (default 20)
         in: query
         name: limit
@@ -375,10 +446,10 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: When `simple=true` returns array of {id,name,tag} objects
           schema:
             items:
-              $ref: '#/definitions/models.ProductResponse'
+              type: object
             type: array
       summary: Get all products
       tags:
@@ -539,6 +610,98 @@ paths:
       summary: Upload multiple images for a product (replace all)
       tags:
       - product-images
+  /promotions:
+    get:
+      description: Get all promotions, optional ?product_id= to filter
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.PromotionResponse'
+            type: array
+      summary: List promotions
+      tags:
+      - promotion
+    post:
+      consumes:
+      - application/json
+      description: Add a new promotion to the database
+      parameters:
+      - description: Promotion data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.BodyPromotionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.PromotionResponse'
+      summary: Create a new promotion
+      tags:
+      - promotion
+  /promotions/{id}:
+    delete:
+      parameters:
+      - description: Promotion ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+      summary: Delete a promotion
+      tags:
+      - promotion
+    get:
+      parameters:
+      - description: Promotion ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.PromotionResponse'
+      summary: Get promotion by ID
+      tags:
+      - promotion
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Promotion ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated promotion data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.BodyPromotionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.PromotionResponse'
+      summary: Update a promotion
+      tags:
+      - promotion
   /reports/products/top:
     get:
       consumes:

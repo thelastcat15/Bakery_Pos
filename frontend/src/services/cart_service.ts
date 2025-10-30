@@ -38,7 +38,7 @@ export const updateQuantityInCart = async (
   quantity: number
 ): Promise<CartItem[]> => {
   try {
-    const response = await api.put(`${BASE_CART}/${productId}`, {
+    const response = await api.put(`${BASE_CART}/${productId}?fast=true`, {
       quantity,
     })
     return response.data

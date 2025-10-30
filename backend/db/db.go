@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"gorm.io/driver/postgres"
+
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
@@ -41,4 +42,15 @@ func Connect_DB() {
 		log.Fatalf("AutoMigrate failed: %v", err)
 	}
 	log.Println("✅ Auto Migration completed")
+
+	// Ensure sequences are in sync with table max(id) to avoid duplicate key errors
+	// This can happen if rows were inserted manually or restored without updating the sequence.
+	// Adjust the sequence for promotions table.
+	if err := DB.Exec(
+		"SELECT setval(pg_get_serial_sequence('promotions','id'), COALESCE((SELECT MAX(id) FROM promotions), 0))",
+	).Error; err != nil {
+		log.Printf("Warning: failed to sync promotions sequence: %v", err)
+	} else {
+		log.Println("✅ promotions sequence synced")
+	}
 }

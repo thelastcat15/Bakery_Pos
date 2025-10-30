@@ -2,11 +2,11 @@
 import { CategoryButton } from "@/components/common/Button"
 import { OrderCard } from "@/components/common/Card"
 import { useOrders } from "@/context/OrderContext"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 const OrderTrackingPage = () => {
   const [activeFilter, setActiveFilter] = useState("all")
-  const { orders, isLoaded } = useOrders()
+  const { orders, isLoaded, reloadOrders } = useOrders()
 
   const filteredOrders =
     activeFilter === "all"

@@ -12,9 +12,16 @@ export const createProduct = async (newProduct: Product): Promise<Product> => {
   }
 }
 
-export const getAllProducts = async (): Promise<Product[]> => {
+export const getAllProducts = async (
+  q: string | null = null,
+  simple: boolean = false
+): Promise<Product[]> => {
   try {
-    const response = await api.get(`${BASE_PRODUCT}`)
+    const params: string[] = []
+    if (q && q.trim() !== "") params.push(`q=${encodeURIComponent(q)}`)
+    if (simple) params.push(`simple=true`)
+    const query = params.length > 0 ? `?${params.join("&")}` : ""
+    const response = await api.get(`${BASE_PRODUCT}${query}`)
     return response.data
   } catch (error) {
     console.error("Get all product error:", error)

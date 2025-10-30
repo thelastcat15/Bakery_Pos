@@ -55,7 +55,18 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         const existing = cartItems.find((item) => item.id === product.id);
         const newQuantity = existing ? existing.quantity + quantity : quantity;
         const updatedItems = await apiUpdateQuantity(product.id!!, newQuantity);
-        setCartItems(updatedItems);
+
+        setCartItems((prev) =>
+          prev.map((item) =>
+            item.id === product.id ? { ...item, quantity: newQuantity } : item
+          )
+        );
+        if (!existing) {
+          setCartItems((prev) => {
+
+            return [...prev, updatedItems.find((item) => item.id === product.id)!];
+          });
+        }
       } catch (error) {
         console.error("Failed to add item to cart", error);
       }
@@ -65,8 +76,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const removeFromCart = useCallback(async (productId: number) => {
     try {
-      const updatedItems = await apiUpdateQuantity(productId, 0);
-      setCartItems(updatedItems);
+      await apiUpdateQuantity(productId, 0);
+      setCartItems((prev) => prev.filter((item) => item.id !== productId));
     } catch (error) {
       console.error("Failed to remove item from cart", error);
     }
@@ -74,8 +85,15 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const updateQuantity = useCallback(async (productId: number, quantity: number) => {
     try {
-      const updatedItems = await apiUpdateQuantity(productId, quantity);
-      setCartItems(updatedItems);
+      await apiUpdateQuantity(productId, quantity);
+      setCartItems((prev) => {
+        if (quantity === 0) {
+          return prev.filter((item) => item.id !== productId);
+        }
+        return prev.map((item) =>
+          item.id === productId ? { ...item, quantity } : item
+        );
+      });
     } catch (error) {
       console.error("Failed to update quantity", error);
     }

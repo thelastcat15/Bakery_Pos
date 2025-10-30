@@ -1,40 +1,55 @@
 "use client"
 import { usePromotions } from "@/hooks/usePromotions"
 import { getAllProducts } from "@/services/product_service"
-import { Category } from "@/types/category_type"
 import { Product } from "@/types/product_type"
-import { Promotion } from "@/types/promotion_types"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 
 // ฟอร์มใช้ type แยกเพื่อให้ discount เป็น string ได้
-type PromotionForm = Omit<
-  Promotion,
-  "id" | "createdAt" | "updatedAt" | "discount"
-> & {
+type PromotionForm = {
+  name: string
+  product_id: number | ""
+  description: string
   discount: string
+  startDate: string
+  endDate: string
 }
 
 const PromotionManagement = () => {
   const [newPromotion, setNewPromotion] = useState<PromotionForm>({
     name: "",
-    type: "all",
-    target: "",
+    product_id: "",
+    description: "",
     discount: "",
     startDate: "",
     endDate: "",
-    announcement: "",
   })
 
   const [products, setProducts] = useState<Product[]>([])
-  const [categories, setCategories] = useState<string[]>([])
+  // server-side search removed — using client-side filter on loaded products
+  const [productInput, setProductInput] = useState("")
+  const [isProductDropdownOpen, setIsProductDropdownOpen] = useState(false)
+  const productContainerRef = useRef<HTMLDivElement | null>(null)
 
   const handleListProduct = async () => {
-    const data = await getAllProducts()
+    // request light weight fields for selection
+    const data = await getAllProducts(null, true)
     setProducts(data)
-    const uniqCategories = Array.from(new Set(data.map((p) => p.category)))
-
-    setCategories(uniqCategories)
+    // categories no longer used; promotions target products only
   }
+
+  // close dropdown when clicking outside
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      if (
+        productContainerRef.current &&
+        !productContainerRef.current.contains(e.target as Node)
+      ) {
+        setIsProductDropdownOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", onClick)
+    return () => document.removeEventListener("mousedown", onClick)
+  }, [])
 
   useEffect(() => {
     handleListProduct()
@@ -67,85 +82,62 @@ const PromotionManagement = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">
-              ข้อความประกาศ
-            </label>
+            <label className="block text-sm font-medium mb-1">คำอธิบาย</label>
             <textarea
-              value={newPromotion.announcement}
+              value={newPromotion.description}
               onChange={(e) =>
-                setNewPromotion({
-                  ...newPromotion,
-                  announcement: e.target.value,
-                })
+                setNewPromotion({ ...newPromotion, description: e.target.value })
               }
               className="w-full px-3 py-2 border rounded-lg"
               rows={3}
-              placeholder="ข้อความที่จะแสดงให้ลูกค้าเห็น"
+              placeholder="คำอธิบายโปรโมชั่น (จะแสดงในหน้ารายการ)"
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                ประเภทเป้าหมาย
-              </label>
-              <select
-                value={newPromotion.type}
-                onChange={(e) =>
-                  setNewPromotion({
-                    ...newPromotion,
-                    type: e.target.value as "all" | "category" | "product",
-                    target: "",
-                  })
-                }
-                className="w-full px-3 py-2 border rounded-lg">
-                <option value="all">ทุกสินค้า</option>
-                <option value="category">ตามหมวดหมู่</option>
-                <option value="product">สินค้าเฉพาะ</option>
-              </select>
+            {/* search button removed; use the dropdown input to filter loaded products */}
+            <div ref={productContainerRef} className="relative">
+              <label className="block text-sm font-medium mb-1">เลือกสินค้า</label>
+              <input
+                type="text"
+                value={productInput}
+                onChange={(e) => {
+                  setProductInput(e.target.value)
+                  setIsProductDropdownOpen(true)
+                }}
+                onFocus={() => setIsProductDropdownOpen(true)}
+                placeholder="พิมพ์เพื่อค้นหาและเลือกสินค้า"
+                className="w-full px-3 py-2 border rounded-lg"
+              />
+
+              {isProductDropdownOpen && (
+                <ul className="absolute z-40 bg-white border rounded mt-1 w-full max-h-48 overflow-auto">
+                  {products
+                    .filter((p: any) =>
+                      p.name.toLowerCase().includes(productInput.toLowerCase())
+                    )
+                    .map((product: any) => (
+                      <li
+                        key={product.id}
+                        onMouseDown={(e) => {
+                          // onMouseDown to prevent blur before click
+                          e.preventDefault()
+                          setNewPromotion({ ...newPromotion, product_id: product.id })
+                          setProductInput(product.name)
+                          setIsProductDropdownOpen(false)
+                        }}
+                        className="px-3 py-2 hover:bg-gray-100 cursor-pointer">
+                        {product.name}
+                      </li>
+                    ))}
+                  {products.filter((p: any) =>
+                    p.name.toLowerCase().includes(productInput.toLowerCase())
+                  ).length === 0 && (
+                    <li className="px-3 py-2 text-gray-500">ไม่พบสินค้า</li>
+                  )}
+                </ul>
+              )}
             </div>
-
-            {newPromotion.type === "category" && (
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  เลือกหมวดหมู่
-                </label>
-                <select
-                  value={newPromotion.target}
-                  onChange={(e) =>
-                    setNewPromotion({ ...newPromotion, target: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border rounded-lg">
-                  <option value="">เลือกหมวดหมู่</option>
-                  {categories.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {newPromotion.type === "product" && (
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  เลือกสินค้า
-                </label>
-                <select
-                  value={newPromotion.target}
-                  onChange={(e) =>
-                    setNewPromotion({ ...newPromotion, target: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border rounded-lg">
-                  <option value="">เลือกสินค้า</option>
-                  {products.map((product) => (
-                    <option key={product.id} value={product.name}>
-                      {product.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
 
             <div>
               <label className="block text-sm font-medium mb-1">
@@ -198,36 +190,37 @@ const PromotionManagement = () => {
           </div>
 
           <button
-            onClick={() => {
+            onClick={async () => {
               if (
                 newPromotion.name &&
                 newPromotion.discount &&
                 newPromotion.startDate &&
                 newPromotion.endDate
               ) {
-                if (newPromotion.type !== "all" && !newPromotion.target) {
-                  alert("กรุณาเลือกเป้าหมายของโปรโมชั่น")
-                  return
-                }
+                  if (!newPromotion.product_id) {
+                    alert("กรุณาเลือกสินค้าเป้าหมายของโปรโมชั่น")
+                    return
+                  }
 
-                const promotion: Omit<
-                  Promotion,
-                  "id" | "createdAt" | "updatedAt"
-                > = {
-                  ...newPromotion,
-                  discount: parseInt(newPromotion.discount),
-                }
+                  const payload = {
+                    product_id: Number(newPromotion.product_id),
+                    name: newPromotion.name,
+                    description: newPromotion.description,
+                    discount: Number(newPromotion.discount),
+                    start_date: `${newPromotion.startDate}T00:00:00Z`,
+                    end_date: `${newPromotion.endDate}T23:59:59Z`,
+                    is_active: true,
+                  }
 
-                createPromotion(promotion)
+                  await createPromotion(payload as any)
 
                 setNewPromotion({
                   name: "",
-                  type: "all",
-                  target: "",
+                  product_id: "",
+                  description: "",
                   discount: "",
                   startDate: "",
                   endDate: "",
-                  announcement: "",
                 })
               } else {
                 alert("กรุณากรอกข้อมูลให้ครบถ้วน")
@@ -256,74 +249,27 @@ const PromotionManagement = () => {
                     ลบ
                   </button>
                 </div>
-                <p className="text-sm text-gray-600 mb-2">
-                  {promo.announcement}
-                </p>
+                <p className="text-sm text-gray-600 mb-2">{promo.description}</p>
                 <div className="text-sm">
                   <p>
                     <strong>เป้าหมาย:</strong>{" "}
-                    {promo.type === "all"
-                      ? "ทุกสินค้า"
-                      : promo.type === "category"
-                      ? `หมวดหมู่ ${promo.target}`
-                      : `สินค้า ${promo.target}`}
+                    {(() => {
+                      const prod = products.find((p) => p.id === promo.product_id)
+                      return prod ? `สินค้า ${prod.name}` : `สินค้า (ไม่พบ)`
+                    })()}
                   </p>
                   <p>
                     <strong>ส่วนลด:</strong> {promo.discount}%
                   </p>
                   <p>
-                    <strong>ระยะเวลา:</strong> {promo.startDate} ถึง{" "}
-                    {promo.endDate}
+                    <strong>ระยะเวลา:</strong> {promo.start_date} ถึง{" "}
+                    {promo.end_date}
                   </p>
                 </div>
               </div>
             ))}
           </div>
         )}
-      </div>
-
-      {/* Preview Section */}
-      <div className="bg-white p-6 rounded-lg border">
-        <h3 className="text-lg font-semibold mb-4">
-          ตัวอย่างสินค้าหลังใช้โปรโมชั่น
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {products.slice(0, 4).map((product) => {
-            const discountedPrice = getDiscountedPrice(product)
-            const hasDiscount = discountedPrice < product.price
-
-            return (
-              <div key={product.id} className="border rounded-lg p-4">
-                <h4 className="font-medium mb-2">{product.name}</h4>
-                <div className="space-y-1">
-                  {hasDiscount ? (
-                    <>
-                      <div className="flex items-center gap-2">
-                        <span className="text-gray-500 line-through text-sm">
-                          ฿{product.price}
-                        </span>
-                        <span className="bg-red-500 text-white text-xs px-1 rounded">
-                          -
-                          {Math.round(
-                            ((product.price - discountedPrice) /
-                              product.price) *
-                              100
-                          )}
-                          %
-                        </span>
-                      </div>
-                      <p className="text-green-600 font-bold">
-                        ฿{Math.round(discountedPrice)}
-                      </p>
-                    </>
-                  ) : (
-                    <p className="font-medium">฿{product.price}</p>
-                  )}
-                </div>
-              </div>
-            )
-          })}
-        </div>
       </div>
     </div>
   )

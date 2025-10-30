@@ -73,3 +73,14 @@ type UploadOrderSlipResponse struct {
 	PublicURL string `json:"public_url"`
 	UploadURL string `json:"upload_url"`
 }
+
+type PromotionResponse struct {
+	ID          uint      `json:"id"`
+	ProductID   uint      `json:"product_id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	Discount    float64   `json:"discount"`
+	StartDate   time.Time `json:"start_date"`
+	EndDate     time.Time `json:"end_date"`
+	IsActive    bool      `json:"is_active"`
+}

@@ -9,3 +9,9 @@ export interface Product {
   category: string
   quantity?: number
 }
+export interface ReportProduct {
+  product_id: number;
+  name: string;
+  quantity: number;
+  revenue: number;
+}

@@ -56,23 +56,30 @@ func (c *Cart) ToResponse() []CartItemResponse {
 	var items []CartItemResponse
 
 	for _, item := range c.Items {
-		if item.Product == nil {
-			continue
+		resp := CartItemResponse{
+			ProductID: item.ProductID,
+			Quantity:  item.Quantity,
 		}
 
-		images := make([]ImageResponse, len(item.Product.Images))
-		for i, img := range item.Product.Images {
-			images[i] = img.ToResponse()
+		if item.Product != nil {
+			resp.ProductName = item.Product.Name
+			resp.Price = item.Product.Price
+			resp.SalePrice = item.Product.FinalPrice()
+
+			if len(item.Product.Images) > 0 {
+				images := make([]ImageResponse, len(item.Product.Images))
+				for i, img := range item.Product.Images {
+					images[i] = img.ToResponse()
+				}
+				resp.Images = images
+			} else {
+				resp.Images = []ImageResponse{}
+			}
+		} else {
+			resp.Images = []ImageResponse{}
 		}
 
-		items = append(items, CartItemResponse{
-			ProductID:   item.ProductID,
-			ProductName: item.Product.Name,
-			Quantity:    item.Quantity,
-			Price:       item.Product.Price,
-			SalePrice:   item.Product.FinalPrice(),
-			Images:      images,
-		})
+		items = append(items, resp)
 	}
 
 	if items == nil {
@@ -80,4 +87,17 @@ func (c *Cart) ToResponse() []CartItemResponse {
 	}
 
 	return items
+}
+
+func (p *Promotion) ToResponse() PromotionResponse {
+	return PromotionResponse{
+		ID:          p.ID,
+		ProductID:   p.ProductID,
+		Name:        p.Name,
+		Description: p.Description,
+		Discount:    p.Discount,
+		StartDate:   p.StartDate,
+		EndDate:     p.EndDate,
+		IsActive:    p.IsActive,
+	}
 }

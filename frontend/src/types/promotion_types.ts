@@ -1,12 +1,12 @@
 export interface Promotion {
   id: number
+  product_id: number
   name: string
-  type: "all" | "category" | "product"
-  target: string
+  description: string
   discount: number
-  startDate: string
-  endDate: string
-  announcement: string
+  start_date: string
+  end_date: string
+  is_active: boolean
   createdAt: Date
   updatedAt: Date
 }
