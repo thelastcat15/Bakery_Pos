@@ -8,10 +8,12 @@ const OrderTrackingPage = () => {
   const [activeFilter, setActiveFilter] = useState("all")
   const { orders, isLoaded, reloadOrders } = useOrders()
 
+  const safeOrders = orders ?? []
+
   const filteredOrders =
     activeFilter === "all"
-      ? orders
-      : orders.filter((order) => order.status === activeFilter)
+      ? safeOrders
+      : safeOrders.filter((order) => order.status === activeFilter)
 
   const categories = [
     {
@@ -82,25 +84,25 @@ const OrderTrackingPage = () => {
         <div className="grid grid-cols-4 gap-4 text-center">
           <div>
             <div className="text-xl font-bold text-orange-500">
-              {orders.filter((o) => o.status === "pending").length}
+              {safeOrders.filter((o) => o.status === "pending").length}
             </div>
             <div className="text-xs text-gray-600>">รอยืนยัน</div>
           </div>
           <div>
             <div className="text-xl font-bold text-blue-500">
-              {orders.filter((o) => o.status === "confirmed").length}
+              {safeOrders.filter((o) => o.status === "confirmed").length}
             </div>
             <div className="text-xs text-gray-600>">ยืนยันแล้ว</div>
           </div>
           <div>
             <div className="text-xl font-bold text-yellow-500">
-              {orders.filter((o) => o.status === "shipping").length}
+              {safeOrders.filter((o) => o.status === "shipping").length}
             </div>
             <div className="text-xs text-gray-600>">กำลังจัดส่ง</div>
           </div>
           <div>
             <div className="text-xl font-bold text-green-500">
-              {orders.filter((o) => o.status === "delivered").length}
+              {safeOrders.filter((o) => o.status === "delivered").length}
             </div>
             <div className="text-xs text-gray-600>">จัดส่งสำเร็จ</div>
           </div>
