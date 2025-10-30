@@ -42,7 +42,7 @@ export const ProductList = ({ products }: ProductListProps) => {
 
 export const CategoryList = ({ categories }: CategoryListProps) => {
   return (
-    <div className="flex flex-wrap py-2 mb-6 gap-2">
+    <div className="flex flex-wrap py-2 gap-2">
       {categories.map((c, index) => (
         <CategoryButton
           key={index}

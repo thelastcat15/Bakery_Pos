@@ -10,6 +10,7 @@ import { useEffect, useMemo, useState } from "react"
 const ProductsPage = () => {
   const [products, setProducts] = useState<Product[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [searchText, setSearchText] = useState<string>("")
 
   const handleListProduct = async () => {
     const data = await getAllProducts()
@@ -37,17 +38,45 @@ const ProductsPage = () => {
     })) as Category[]
   }, [products, selectedCategory])
 
+  const filteredProducts = useMemo(() => {
+    const q = searchText.trim().toLowerCase()
+    let result = products
+
+    if (q !== "") {
+      result = result.filter((p) => {
+        const name = (p.name || "").toString().toLowerCase()
+        const desc = (p.detail || "").toString().toLowerCase()
+        return name.includes(q) || desc.includes(q)
+      })
+    }
+
+    if (selectedCategory) {
+      result = result.filter((p) => p.category === selectedCategory)
+    }
+
+    return result
+  }, [products, selectedCategory, searchText])
+
   return (
     <div className="max-w-6xl mx-auto">
       <div className="py-8 px-4 md:px-2 xl:px-0 md:py-16">
         <h1 className="font-bold text-2xl md:text-4xl mb-12">สินค้าทั้งหมด</h1>
-        <CategoryList categories={categories} />
+        <div className="mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="w-full md:w-1/2">
+            <input
+              type="text"
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              placeholder="ค้นหาสินค้า (ชื่อหรือคำอธิบาย)"
+              className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </div>
+          <div className="w-full md:w-auto">
+            <CategoryList categories={categories} />
+          </div>
+        </div>
         <ProductList
-          products={
-            selectedCategory
-              ? products.filter((p) => p.category === selectedCategory)
-              : products
-          }
+          products={filteredProducts}
         />
       </div>
     </div>

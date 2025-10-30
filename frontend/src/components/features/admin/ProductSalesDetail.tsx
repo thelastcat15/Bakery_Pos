@@ -8,18 +8,52 @@ const ProductSalesDetail = () => {
   const [productSummaries, setProductSummaries] = useState<ProductSalesSummary[]>([])
   const [customerDetails, setCustomerDetails] = useState<ProductCustomerDetail[]>([])
   const [selectedProductId, setSelectedProductId] = useState<number | null>(null)
+  const [page, setPage] = useState<number>(1)
+  const [limit] = useState<number>(10)
+  const [total, setTotal] = useState<number>(0)
+  const [totalPages, setTotalPages] = useState<number>(1)
 
   useEffect(() => {
     const fetchSummaries = async () => {
       try {
-        const data = await getProductSalesSummary()
-        setProductSummaries(data)
+        const res = await getProductSalesSummary(undefined, undefined, page, limit)
+        // backend supports both paginated object or legacy array
+        if (Array.isArray(res)) {
+          setProductSummaries(res)
+          setTotal(res.length)
+          setTotalPages(1)
+        } else {
+          setProductSummaries(res.data)
+          setTotal(res.total)
+          setTotalPages(Math.max(1, Math.ceil(res.total / (res.limit || limit))))
+        }
       } catch (err) {
         console.error("Failed to load product summaries", err)
       }
     }
     fetchSummaries()
   }, [])
+
+  // refetch when page changes
+  useEffect(() => {
+    const fetchPage = async () => {
+      try {
+        const res = await getProductSalesSummary(undefined, undefined, page, limit)
+        if (Array.isArray(res)) {
+          setProductSummaries(res)
+          setTotal(res.length)
+          setTotalPages(1)
+        } else {
+          setProductSummaries(res.data)
+          setTotal(res.total)
+          setTotalPages(Math.max(1, Math.ceil(res.total / (res.limit || limit))))
+        }
+      } catch (err) {
+        console.error("Failed to load product summaries page", err)
+      }
+    }
+    fetchPage()
+  }, [page, limit])
 
   useEffect(() => {
     if (!selectedProductId) {
@@ -89,6 +123,28 @@ const ProductSalesDetail = () => {
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* Pagination controls */}
+        <div className="flex items-center justify-between px-4 py-3 bg-white border-t">
+          <div className="text-sm text-gray-600">รวม {total.toLocaleString()} รายการ</div>
+          <div className="flex items-center space-x-2">
+            <button
+              className="px-3 py-1 bg-white border rounded disabled:opacity-50"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page <= 1}
+            >
+              ก่อนหน้า
+            </button>
+            <div className="text-sm text-gray-700">{page} / {totalPages}</div>
+            <button
+              className="px-3 py-1 bg-white border rounded disabled:opacity-50"
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page >= totalPages}
+            >
+              ถัดไป
+            </button>
+          </div>
         </div>
       </div>
 

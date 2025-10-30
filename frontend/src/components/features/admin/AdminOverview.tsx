@@ -39,13 +39,16 @@ const AdminOverview = () => {
       setError(null)
       try {
         // top products and hourly
-        const [productsData, hourlyData, productSummaries] = await Promise.all([
+        const [productsData, hourlyData, productSummariesRaw] = await Promise.all([
           getTopProducts(),
           getSalesByHour(),
           getProductSalesSummary(),
         ])
 
         setTopProducts(productsData || [])
+
+        // productSummaries may be either an array (legacy) or a paginated object
+        const productSummaries = Array.isArray(productSummariesRaw) ? productSummariesRaw : (productSummariesRaw?.data || [])
 
         const chart = (hourlyData || []).map((h: SalesByHourReport) => ({
           hour: h.hour,
@@ -54,7 +57,7 @@ const AdminOverview = () => {
         setHourlySales(chart)
 
         // compute totalSales from product summaries
-        const total = (productSummaries || []).reduce((s: number, p: ProductSalesSummary) => s + (p.total_revenue || 0), 0)
+  const total = (productSummaries || []).reduce((s: number, p: ProductSalesSummary) => s + (p.total_revenue || 0), 0)
         setTotalSales(Math.round(total))
 
         // compute weekly, monthly, yearly sums using sales/daily endpoint
@@ -105,19 +108,16 @@ const AdminOverview = () => {
         const hourly = await getSalesByHour(dateStr)
         setHourlySales((hourly || []).map((h: SalesByHourReport) => ({ hour: h.hour, sales: Math.round(h.total) })))
 
-        // last 7 days (inclusive) — fill missing days with 0
         const d = new Date(dateStr)
         const start = new Date(d)
         start.setDate(d.getDate() - 6)
         const startStr = start.toISOString().slice(0, 10)
         const daily = (await getSalesByDay(startStr, dateStr)) || []
 
-        // build a map from date -> total for quick lookup
         const dailyMap = new Map<string, number>(
           daily.map((dd: SalesByDayReport) => [dd.date, dd.total || 0])
         )
 
-        // produce exactly 7 entries from start .. selectedDate (inclusive)
         const days: { date: string; total: number }[] = []
         for (let i = 0; i < 7; i++) {
           const cur = new Date(start)

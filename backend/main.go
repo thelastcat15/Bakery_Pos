@@ -82,9 +82,9 @@ func main() {
 
 	// Promotions (admin)
 	promotions := api.Group("/promotions")
-	promotions.Get("/", middleware.Auth, middleware.Admin, routes_admin.GetPromotions)
+	promotions.Get("/", routes_admin.GetPromotions)
 	promotions.Post("/", middleware.Auth, middleware.Admin, routes_admin.CreatePromotion)
-	promotions.Get(":id", middleware.Auth, middleware.Admin, routes_admin.GetPromotionByID)
+	promotions.Get(":id", routes_admin.GetPromotionByID)
 	promotions.Put(":id", middleware.Auth, middleware.Admin, routes_admin.UpdatePromotion)
 	promotions.Delete(":id", middleware.Auth, middleware.Admin, routes_admin.DeletePromotion)
 

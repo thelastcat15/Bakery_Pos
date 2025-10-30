@@ -1,5 +1,7 @@
 package models
 
+import "github.com/google/uuid"
+
 type TopProductReport struct {
 	ProductID uint    `json:"product_id"`
 	Name      string  `json:"name"`
@@ -29,9 +31,9 @@ type ProductSalesSummary struct {
 
 // Customer level details for a specific product
 type ProductCustomerDetail struct {
-	CustomerID    string  `json:"customer_id"`
-	CustomerName  string  `json:"customer_name"`
-	OrderCount    int     `json:"order_count"`
-	TotalQuantity int     `json:"total_quantity"`
-	TotalAmount   float64 `json:"total_amount"`
+	CustomerID    uuid.UUID `json:"customer_id"`
+	CustomerName  string    `json:"customer_name"`
+	OrderCount    int       `json:"order_count"`
+	TotalQuantity int       `json:"total_quantity"`
+	TotalAmount   float64   `json:"total_amount"`
 }

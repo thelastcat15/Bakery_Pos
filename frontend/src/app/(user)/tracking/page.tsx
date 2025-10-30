@@ -65,7 +65,7 @@ const OrderTrackingPage = () => {
 
       {/* Orders List */}
       <div className="space-y-4">
-        {!isLoaded ? (
+        {!isLoaded || !filteredOrders ? (
           <div className="bg-white rounded-2xl p-8 text-center">
             <p className="text-gray-500">กำลังโหลด...</p>
           </div>

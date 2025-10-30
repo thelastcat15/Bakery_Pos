@@ -24,9 +24,22 @@ export const getSalesByHour = async (date?: string): Promise<SalesByHourReport[]
   }
 }
 
-export const getProductSalesSummary = async (start?: string, end?: string): Promise<ProductSalesSummary[]> => {
+export type PaginatedProductSales = { data: ProductSalesSummary[]; total: number; page: number; limit: number }
+
+// If `page` and `limit` are provided the server will return a paginated object.
+// Otherwise the server returns a plain array (backwards-compatible).
+export const getProductSalesSummary = async (
+  start?: string,
+  end?: string,
+  page?: number,
+  limit?: number,
+): Promise<ProductSalesSummary[] | PaginatedProductSales> => {
   try {
-    const response = await api.get(`${BASE_CART}/products/sales`, { params: { start, end } })
+    const params: any = { start, end }
+    if (page !== undefined) params.page = page
+    if (limit !== undefined) params.limit = limit
+
+    const response = await api.get(`${BASE_CART}/products/sales`, { params })
     return response.data
   } catch (error) {
     console.error("Get product sales summary error:", error)
