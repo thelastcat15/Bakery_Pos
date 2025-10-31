@@ -2,12 +2,16 @@
 import { useCart } from "@/context/CartContext"
 import { useUser } from "@/hooks/useUser"
 import Link from "next/link"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false)
   const { getTotalItems } = useCart()
   const totalItems = getTotalItems()
   const { user, isLoaded: userLoaded } = useUser()
+
+  useEffect(() => {
+    console.log(userLoaded, user)
+  }, [user, userLoaded])
 
   return (
     <nav className="py-6 max-w-6xl mx-auto">
@@ -69,13 +73,14 @@ const Navbar = () => {
                 {userLoaded && user ? (
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
                     viewBox="0 0 24 24"
-                    fill="currentColor"
+                    stroke="currentColor"
                     className="size-6 text-amber-500">
                     <path
-                      fillRule="evenodd"
-                      d="M16.5 3.75a1.5 1.5 0 0 1 1.5 1.5v13.5a1.5 1.5 0 0 1-1.5 1.5h-6a1.5 1.5 0 0 1-1.5-1.5V15a.75.75 0 0 0-1.5 0v3.75a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V5.25a3 3 0 0 0-3-3h-6a3 3 0 0 0-3 3V9A.75.75 0 1 0 9 9V5.25a1.5 1.5 0 0 1 1.5-1.5h6Zm-5.03 4.72a.75.75 0 0 0 0 1.06l1.72 1.72H2.25a.75.75 0 0 0 0 1.5h10.94l-1.72 1.72a.75.75 0 1 0 1.06 1.06l3-3a.75.75 0 0 0 0-1.06l-3-3a.75.75 0 0 0-1.06 0Z"
-                      clipRule="evenodd"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15m-3 0-3-3m0 0 3-3m-3 3H15"
                     />
                   </svg>
                 ) : (
@@ -86,7 +91,7 @@ const Navbar = () => {
                     className="size-6 text-amber-500">
                     <path
                       fillRule="evenodd"
-                      d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6A2.25 2.25 0 0 0 5.25 5.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15a.75.75 0 0 1 1.5 0v3.75A3.75 3.75 0 0 1 13.5 22.5h-6A3.75 3.75 0 0 1 3.75 18.75V5.25A3.75 3.75 0 0 1 7.5 1.5h6A3.75 3.75 0 0 1 17.25 5.25V9a.75.75 0 0 1-1.5 0Zm-3.72 2.22a.75.75 0 0 0 0 1.06l1.72 1.72H2.25a.75.75 0 0 0 0 1.5h11.5l-1.72 1.72a.75.75 0 1 0 1.06 1.06l3-3a.75.75 0 0 0 0-1.06l-3-3a.75.75 0 0 0-1.06 0Z"
+                      d="M16.5 3.75a1.5 1.5 0 0 1 1.5 1.5v13.5a1.5 1.5 0 0 1-1.5 1.5h-6a1.5 1.5 0 0 1-1.5-1.5V15a.75.75 0 0 0-1.5 0v3.75a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V5.25a3 3 0 0 0-3-3h-6a3 3 0 0 0-3 3V9A.75.75 0 1 0 9 9V5.25a1.5 1.5 0 0 1 1.5-1.5h6Zm-5.03 4.72a.75.75 0 0 0 0 1.06l1.72 1.72H2.25a.75.75 0 0 0 0 1.5h10.94l-1.72 1.72a.75.75 0 1 0 1.06 1.06l3-3a.75.75 0 0 0 0-1.06l-3-3a.75.75 0 0 0-1.06 0Z"
                       clipRule="evenodd"
                     />
                   </svg>
